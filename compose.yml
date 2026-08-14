@@ -1,0 +1,25 @@
+# ============================================
+# 開発用 Docker Compose
+# 起動: docker compose up -d
+# 移行: docker compose exec app npm run migrate
+# ============================================
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      # ソースコードをマウント（編集が即反映される）
+      - .:/app
+      # node_modulesはコンテナ内のものを使う（ホストと混ざらないよう除外）
+      - /app/node_modules
+      # .nextビルドキャッシュもコンテナ内に閉じる
+      - /app/.next
+    env_file:
+      - .env.local
+    environment:
+      # ファイル変更検知をポーリングにする（Docker上で確実にホットリロード）
+      - WATCHPACK_POLLING=true
+    restart: unless-stopped
