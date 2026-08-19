@@ -7,7 +7,7 @@ export async function POST(request: Request) {
   try {
     await requireUser(); // ログイン必須
     const body = await request.json();
-    const { title, description, image_url, production_date } = body;
+    const { title, description, image_url, production_date, image_width, image_height } = body;
 
     if (!title || !image_url) {
       return NextResponse.json(
@@ -21,6 +21,9 @@ export async function POST(request: Request) {
       description: description ?? null,
       image_url,
       production_date: production_date || null,
+      // カードの行数を画像の比から決めるのに使う（表側のグリッド）
+      image_width: image_width ?? null,
+      image_height: image_height ?? null,
     });
     return NextResponse.json(created, { status: 201 });
   } catch (e) {

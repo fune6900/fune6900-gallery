@@ -10,6 +10,10 @@ CREATE TABLE IF NOT EXISTS illustrations (
   description     TEXT,
   image_url       TEXT NOT NULL,
   production_date DATE,
+  -- 表側のギャラリーは、この比からカードの行数を決めて画像を積む。
+  -- 空でも 4:3 として描画されるので、後から埋めてよい。
+  image_width     INTEGER,
+  image_height    INTEGER,
   created_at      TIMESTAMPTZ DEFAULT now(),
   updated_at      TIMESTAMPTZ DEFAULT now()
 );

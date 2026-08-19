@@ -18,16 +18,25 @@ Dockerfile.dev          開発用（ホットリロード）
 Dockerfile              本番用（standalone・自前ホスト時）
 compose.yml             開発用Docker Compose
 app/
-  page.tsx              表側トップ（作品一覧）
-  works/[id]/page.tsx   作品詳細
+  layout.tsx            <html>/フォント読み込み
+  fune-gallery.css      表側のスタイル（旧テーマのSCSSをコンパイルしたもの・編集しない）
+  (site)/               表側。旧WordPressテーマ fune-gallery と同じ見た目
+    page.tsx            トップ（front-page.php + search.php）
+    works/[id]/page.tsx 作品詳細（single-illustration.php）
+    not-found.tsx       404（404.php）
   login/page.tsx        管理ログイン
   admin/                管理画面（ログイン必須）
   api/                  作成・更新・削除・画像アップロードAPI
-lib/                    接続・認証・CRUD
+components/             表側のパーツ（ヘッダー/ヒーロー/カード/計器帯 …）
+public/fune-gallery.js  表側の動き（旧テーマの assets/js/main.js そのまま）
+lib/                    接続・認証・CRUD・ギャラリーの取得と幾何計算
 middleware.ts           /admin をログイン必須に
 scripts/
   migrate-from-wordpress.ts  WordPress→Supabase+R2 移行
-supabase-setup.sql      DBテーブル作成SQL
+  backfill-image-size.ts     既存作品に画像の実寸を埋める
+supabase-setup.sql         DBテーブル作成SQL
+supabase-add-image-size.sql 画像サイズ列の追加（既存DB向け）
+docker-lamp/               旧WordPress一式（デザインの原本。アプリからは参照しない）
 ```
 
 ## セットアップ手順（Docker前提）
@@ -44,6 +53,8 @@ cp .env.local.example .env.local
 
 1. Supabaseでプロジェクト作成
 2. SQL Editor に `supabase-setup.sql` を貼って実行（テーブル作成）
+   既にテーブルがある場合は、代わりに `supabase-add-image-size.sql` を実行して
+   画像サイズ列を足す（表側のギャラリーがこの比でカードの高さを決めるため）
 3. Authentication → Users → Add user で、自分のメール+パスワードを登録
    （これが管理画面のログイン情報）
 4. Project Settings → API から URL・anon・service_role キーを取得し `.env.local` へ
@@ -79,6 +90,17 @@ docker compose exec app npm run migrate
 
 128点の作品と画像が Supabase + R2 に移行される。
 
+移行後（および既存DBに列を足した後）は、画像の実寸を埋める:
+
+```bash
+npm run backfill:size
+```
+
+R2 の画像のヘッダだけ読んで `image_width` / `image_height` を入れる。
+表側のギャラリーはこの比からカードの行数を決めるので、これを入れないと
+縦長の作品も横長と同じ高さの枠に収まり、上下が削られる。
+（入っていなくても 4:3 として表示されるので、サイトは壊れない）
+
 ### 6. Vercelにデプロイ（公開）
 
 1. GitHubリポジトリにpush
@@ -113,6 +135,40 @@ docker compose logs -f app        # ログ確認
 docker compose exec app sh        # コンテナ内シェルに入る
 docker compose exec app npm run migrate  # 移行実行
 ```
+
+## 表側のデザイン
+
+旧WordPressテーマ `fune-gallery`（ゼンレスゾーンゼロ調）をそのまま移植している。
+設計の根拠と実測値は **`docker-lamp/htdocs/wp-content/themes/fune-gallery/DESIGN.md`** が
+引き続き正。マークアップのクラス名・DOM構造もテンプレートに合わせてあるので、
+DESIGN.md を読めばこちらのコードも読める。
+
+- **CSS** — テーマの `src/scss/main.scss` を dart-sass でコンパイルした結果が
+  `app/fune-gallery.css`。**直接編集しない。** 直すときは SCSS を直してから:
+
+  ```bash
+  cd docker-lamp/htdocs/wp-content/themes/fune-gallery
+  npm install   # 初回のみ
+  ./node_modules/.bin/sass src/scss/main.scss "../../../../../app/fune-gallery.css" \
+    --load-path=node_modules --style=expanded --no-source-map
+  ```
+
+- **JS** — テーマの `assets/js/main.js` をそのまま `public/fune-gallery.js` に置いてある。
+  差分は起動部分の1箇所だけ（`DOMContentLoaded` を待つ／既に終わっていればすぐ走らせる）。
+
+- **リンク** — 表側は `<Link>` ではなく素の `<a>` を使う。WordPress と同じく毎回
+  ページ全体を読み直すことで、読み込みイントロとページ送りのCRT演出が同じように出る。
+
+- **PHP との対応** — `lib/gallery.ts` の関数名は functions.php に合わせてある
+  （`fune_gallery_tv_geometry()` → `tvGeometry()` など）。
+
+### WordPress から変わった点
+
+- **About は無い**（旧テーマで 2026-08-02 に廃止済み。ナビもギャラリーのみ）
+- **ページ送りは `/page/2/` ではなく `?paged=2`**
+- **画像の比は DBの `image_width` / `image_height` から取る**（旧テーマは添付メタから取っていた）
+- **検索は `title` / `description` の部分一致**（`posts_search` フィルタの置き換え）
+- **SHUFFLE の seed** は URL に固定する。無い場合はサーバー側で振ってリダイレクトする
 
 ## 認証の仕組み
 

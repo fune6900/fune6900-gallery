@@ -1,8 +1,16 @@
+/**
+ * どのルートにも当たらなかったときの 404。
+ * ルートレイアウト直下なので、表側のCSSとJSはここで自分で読み込む。
+ */
+import Script from "next/script";
+import SignalLost from "@/components/SignalLost";
+import "./fune-gallery.css";
+
 export default function NotFound() {
   return (
-    <div style={{padding: 40, textAlign: 'center'}}>
-      <h1>ページが見つかりません</h1>
-      <p>指定したページは存在しないか、移動しました。</p>
-    </div>
+    <>
+      <SignalLost />
+      <Script src="/fune-gallery.js" strategy="afterInteractive" />
+    </>
   );
 }

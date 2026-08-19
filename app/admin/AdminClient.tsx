@@ -133,6 +133,13 @@ function WorkForm({
     work?.production_date ?? ""
   );
   const [imageUrl, setImageUrl] = useState(work?.image_url ?? "");
+  // 表側のグリッドはこの比からカードの行数を決めるので、
+  // アップロード時にブラウザで実寸を測って一緒に保存する。
+  const [size, setSize] = useState<{ w: number; h: number } | null>(
+    work?.image_width && work?.image_height
+      ? { w: work.image_width, h: work.image_height }
+      : null
+  );
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -152,6 +159,7 @@ function WorkForm({
     }
     const { url } = await res.json();
     setImageUrl(url);
+    setSize(await measure(file));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -167,6 +175,8 @@ function WorkForm({
       description,
       image_url: imageUrl,
       production_date: productionDate || null,
+      image_width: size?.w ?? null,
+      image_height: size?.h ?? null,
     };
     const res = work
       ? await fetch(`/api/works/${work.id}`, {
@@ -267,4 +277,21 @@ function WorkForm({
       </div>
     </div>
   );
+}
+
+// 選んだ画像の実寸を読む。読めなければ null（表側は 4:3 として扱う）。
+function measure(file: File): Promise<{ w: number; h: number } | null> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      resolve({ w: img.naturalWidth, h: img.naturalHeight });
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = () => {
+      resolve(null);
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  });
 }
