@@ -1,0 +1,21 @@
+{
+  "extends": "next/core-web-vitals",
+  "ignorePatterns": [
+    "docker-lamp/",
+    "agentic-tdd-starter-sets/",
+    "migration-data/",
+    "public/fune-gallery.js",
+    ".next/"
+  ],
+  "rules": {
+    // 表側は <Link> ではなく素の <a> を使う。WordPress と同じく毎回ページ全体を
+    // 読み直すことで、読み込みイントロとページ送りのCRT演出が設計どおり出る。
+    // クライアント遷移にするとその2つが動かなくなるので、このルールは意図的に外す。
+    // 経緯は README「表側のデザイン」を参照。
+    "@next/next/no-html-link-for-pages": "off",
+
+    // App Router では pages/_document.js が無いため、このルールは誤検知になる。
+    // フォントの <link> は app/layout.tsx の <head> に置いており、全ページで読まれる。
+    "@next/next/no-page-custom-font": "off"
+  }
+}
