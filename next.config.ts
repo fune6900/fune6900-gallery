@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.r2.dev" },
       { protocol: "https", hostname: "**.r2.cloudflarestorage.com" },
     ],
+    // 変換結果を長く持つ。作品画像はファイル名込みで一意なので入れ替わらない。
+    // ここが短いと、原寸（1枚20MB超のものもある）を何度も取りに行くことになる。
+    minimumCacheTTL: 60 * 60 * 24 * 31,
   },
 };
 

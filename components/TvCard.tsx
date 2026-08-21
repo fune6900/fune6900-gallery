@@ -7,6 +7,12 @@
 import type { CSSProperties } from "react";
 import type { Illustration } from "@/lib/types";
 import { formatDate, pad, tvGeometry, tvJitter } from "@/lib/gallery";
+import {
+  SIZES_CARD,
+  SIZES_CARD_FEATURE,
+  SIZES_CARD_NARROW,
+  WorkImage,
+} from "./WorkImage";
 
 export default function TvCard({
   work,
@@ -21,6 +27,14 @@ export default function TvCard({
   plain?: boolean;
 }) {
   const geo = tvGeometry(index, work, plain);
+
+  // 実際の表示幅に見合った画像を選ばせる。列数と対応していないと
+  // 必要より大きいものが降ってくる。
+  const sizes = plain
+    ? SIZES_CARD_NARROW
+    : geo.cols === 2
+      ? SIZES_CARD_FEATURE
+      : SIZES_CARD;
 
   const style = {
     ...tvJitter(work.id),
@@ -37,15 +51,11 @@ export default function TvCard({
       href={`/works/${work.id}`}
     >
       <span className="fg-tv__img">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={work.image_url}
-          alt={work.title}
-          width={work.image_width ?? undefined}
-          height={work.image_height ?? undefined}
+        <WorkImage
+          work={work}
+          sizes={sizes}
           // 最初の行は画面に入っているので先に読ませる
-          loading={index < 4 ? "eager" : "lazy"}
-          fetchPriority={index < 4 ? "high" : undefined}
+          priority={!plain && index < 4}
         />
       </span>
       <span className="fg-tv__line" aria-hidden="true" />
