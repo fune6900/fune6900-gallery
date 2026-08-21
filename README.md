@@ -172,8 +172,14 @@ Next.js の App Router のファイル規約に置いてあるので、`<link re
 |---|---|---|
 | `app/favicon.ico` | 16 + 32 | 素の `/favicon.ico` を取りにくる古いクライアント向け |
 | `app/icon.png` | 32×32 | ブラウザのタブ |
-| `app/icon1.png` | 192×192 | Android のホーム画面 |
-| `app/apple-icon.png` | 180×180 | iOS のホーム画面 |
+| `app/icon1.png` | 192×192 | 高解像度のブラウザ用アイコン（ブックマーク・高DPIのタブなど） |
+| `app/apple-icon.png` | 180×180 | iOS のホーム画面（`apple-touch-icon`。iOSはこれだけで効く） |
+
+**Androidのホーム画面アイコンは、このリポジトリでは保証していない。**
+Chrome が正式に見るのは Web App Manifest の `icons` で、`<link rel="icon">` は
+あくまでフォールバックでしかない。対応するなら `app/manifest.ts` を足して
+192×192 を登録すること（PWAとして扱われるようになるので、`display` の指定は
+慎重に）。
 
 元画像は WordPress が生成していた
 `migration-data/uploads/2026/07/cropped-無題163_20240526011732*.png`。
