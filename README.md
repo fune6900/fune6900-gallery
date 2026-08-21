@@ -162,6 +162,29 @@ DESIGN.md を読めばこちらのコードも読める。
 - **PHP との対応** — `lib/gallery.ts` の関数名は functions.php に合わせてある
   （`fune_gallery_tv_geometry()` → `tvGeometry()` など）。
 
+### ファビコン
+
+旧WordPressの「サイトアイコン」（設定 → 添付ID 11）と同じイラストを使っている。
+Next.js の App Router のファイル規約に置いてあるので、`<link rel="icon">` は
+自動で出力される（`app/layout.tsx` には書かない）。
+
+| ファイル | サイズ | 用途 |
+|---|---|---|
+| `app/favicon.ico` | 16 + 32 | 素の `/favicon.ico` を取りにくる古いクライアント向け |
+| `app/icon.png` | 32×32 | ブラウザのタブ |
+| `app/icon1.png` | 192×192 | Android のホーム画面 |
+| `app/apple-icon.png` | 180×180 | iOS のホーム画面 |
+
+元画像は WordPress が生成していた
+`migration-data/uploads/2026/07/cropped-無題163_20240526011732*.png`。
+**`migration-data/` は .gitignore なので、リポジトリには上の4枚しか無い。**
+差し替えるときは元のPNGから作り直すこと（`.ico` は16と32のPNGを
+ICO コンテナに詰めただけのもの）。
+
+透過PNGなので、明るいタブでは白い衣装の部分が地に溶ける。髪のピンクで
+輪郭は保つが、極小サイズでの視認性を上げたい場合は顔まわりに寄せて
+クロップし直すのが早い。
+
 ### WordPress から変わった点
 
 - **About は無い**（旧テーマで 2026-08-02 に廃止済み。ナビもギャラリーのみ）
