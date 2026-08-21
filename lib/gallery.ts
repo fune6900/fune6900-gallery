@@ -39,7 +39,7 @@ function one(v: string | string[] | undefined): string {
 }
 
 export function readParams(
-  sp: Record<string, string | string[] | undefined>
+  sp: Record<string, string | string[] | undefined>,
 ): GalleryParams {
   const sort = one(sp.sort);
   const year = parseInt(one(sp.y), 10);
@@ -64,7 +64,9 @@ export function readParams(
  */
 export function galleryUrl(
   current: GalleryParams,
-  overrides: Partial<Record<"s" | "y" | "sort" | "paged", string | number | null>> = {}
+  overrides: Partial<
+    Record<"s" | "y" | "sort" | "paged", string | number | null>
+  > = {},
 ): string {
   const args: Record<string, string | number | null> = {
     s: current.s !== "" ? current.s : null,
@@ -101,7 +103,7 @@ function safeTerm(term: string): string {
 /** 制作日が入っている作品を、絞り込みを効かせて全件返す（並びは新しい順）。 */
 const fetchFiltered = cache(async function fetchFiltered(
   s: string,
-  year: number
+  year: number,
 ): Promise<Illustration[]> {
   let q = supabasePublic
     .from(TABLE)
@@ -112,7 +114,9 @@ const fetchFiltered = cache(async function fetchFiltered(
     .order("production_date", { ascending: false });
 
   if (year) {
-    q = q.gte("production_date", `${year}-01-01`).lte("production_date", `${year}-12-31`);
+    q = q
+      .gte("production_date", `${year}-01-01`)
+      .lte("production_date", `${year}-12-31`);
   }
 
   const term = safeTerm(s);
@@ -207,7 +211,8 @@ export const getYears = cache(async function getYears(): Promise<number[]> {
 export async function getCountInYear(year: number): Promise<number> {
   if (!year) return 0;
   const rows = await allDated();
-  return rows.filter((r) => (r.production_date ?? "").startsWith(String(year))).length;
+  return rows.filter((r) => (r.production_date ?? "").startsWith(String(year)))
+    .length;
 }
 
 /** fune_gallery_span_years() — 最古から最新まで何年ぶんか。 */
@@ -224,15 +229,17 @@ export async function getFirstYear(): Promise<number> {
 }
 
 /** fune_gallery_last_updated() — 最終更新日を YYYY.MM.DD で。 */
-export const getLastUpdated = cache(async function getLastUpdated(): Promise<string> {
-  const { data, error } = await supabasePublic
-    .from(TABLE)
-    .select("updated_at")
-    .order("updated_at", { ascending: false })
-    .limit(1);
-  if (error || !data?.length) return "—";
-  return (data[0].updated_at as string).slice(0, 10).replace(/-/g, ".");
-});
+export const getLastUpdated = cache(
+  async function getLastUpdated(): Promise<string> {
+    const { data, error } = await supabasePublic
+      .from(TABLE)
+      .select("updated_at")
+      .order("updated_at", { ascending: false })
+      .limit(1);
+    if (error || !data?.length) return "—";
+    return (data[0].updated_at as string).slice(0, 10).replace(/-/g, ".");
+  },
+);
 
 /** fune_gallery_latest() — ヒーローのキューブ6面に貼る最新作。 */
 export async function getLatest(limit = 6): Promise<Illustration[]> {
@@ -243,17 +250,18 @@ export async function getLatest(limit = 6): Promise<Illustration[]> {
 /** fune_gallery_adjacent() — 制作日で前後の作品。 */
 export async function getAdjacent(
   work: Illustration,
-  dir: "prev" | "next"
+  dir: "prev" | "next",
 ): Promise<Illustration | null> {
   if (!work.production_date) return null;
   const rows = await allDated(); // 新しい順
 
   // prev = より古い / next = より新しい
-  const pool = rows.filter((r) =>
-    r.id !== work.id &&
-    (dir === "next"
-      ? (r.production_date ?? "") > work.production_date!
-      : (r.production_date ?? "") < work.production_date!)
+  const pool = rows.filter(
+    (r) =>
+      r.id !== work.id &&
+      (dir === "next"
+        ? (r.production_date ?? "") > work.production_date!
+        : (r.production_date ?? "") < work.production_date!),
   );
   if (!pool.length) return null;
 
@@ -265,7 +273,10 @@ export async function getAdjacent(
  * fune_gallery_related() — 同時期の作品。
  * タクソノミーが無いので「制作日が近い順」が関連の定義。
  */
-export async function getRelated(work: Illustration, limit = 4): Promise<Illustration[]> {
+export async function getRelated(
+  work: Illustration,
+  limit = 4,
+): Promise<Illustration[]> {
   if (!work.production_date) return [];
   const base = Number(work.production_date.replace(/-/g, ""));
   const rows = await allDated();
@@ -331,7 +342,11 @@ export type TvGeometry = { cols: number; rows: number; className: string };
  * 列幅は画面幅で変わるが、この式は比で効くので代表値で計算しても
  * どのブレークポイントでも数％の誤差に収まる。
  */
-export function tvGeometry(index: number, work: Illustration, single = false): TvGeometry {
+export function tvGeometry(
+  index: number,
+  work: Illustration,
+  single = false,
+): TvGeometry {
   // 計算の基準にする代表値（実際の列幅は画面幅で変わる）
   const col = 280.0;
   const gap = 14.0;

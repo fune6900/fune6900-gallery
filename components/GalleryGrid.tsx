@@ -24,7 +24,12 @@ export default function GalleryGrid({
     <>
       <div className="fg-grid">
         {works.map((work, i) => (
-          <TvCard key={work.id} work={work} index={i} channel={offset + i + 1} />
+          <TvCard
+            key={work.id}
+            work={work}
+            index={i}
+            channel={offset + i + 1}
+          />
         ))}
       </div>
       <Pager params={params} paged={paged} pages={pages} />

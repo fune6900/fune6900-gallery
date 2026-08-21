@@ -18,7 +18,7 @@ const PUBLIC_BASE = process.env.R2_PUBLIC_BASE_URL!; // 例: https://xxxx.r2.dev
 export async function uploadToR2(
   key: string,
   body: Buffer | Uint8Array,
-  contentType: string
+  contentType: string,
 ): Promise<string> {
   await r2.send(
     new PutObjectCommand({
@@ -26,7 +26,7 @@ export async function uploadToR2(
       Key: key,
       Body: body,
       ContentType: contentType,
-    })
+    }),
   );
   // 公開バケットのURLを組み立てて返す
   return `${PUBLIC_BASE}/${key}`;

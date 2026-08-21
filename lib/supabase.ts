@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 // anonキーはブラウザに露出してよいキー。RLSで保護する。
 export const supabasePublic = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
 );
 
 // 管理用（サーバー側だけで使う。全権限を持つservice_roleキー）
@@ -13,6 +13,6 @@ export function createAdminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
+    { auth: { autoRefreshToken: false, persistSession: false } },
   );
 }

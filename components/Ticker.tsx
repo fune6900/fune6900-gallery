@@ -13,7 +13,11 @@ export default async function Ticker() {
 
   return (
     <div className="fg-ticker">
-      <svg className="fg-boo" style={{ width: 26, height: 26, color: "var(--lime)", flex: "none" }} aria-hidden="true">
+      <svg
+        className="fg-boo"
+        style={{ width: 26, height: 26, color: "var(--lime)", flex: "none" }}
+        aria-hidden="true"
+      >
         <use href="#fg-i-boo" />
       </svg>
       <span className="fg-ticker__dot" aria-hidden="true" />

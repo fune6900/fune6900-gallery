@@ -16,7 +16,9 @@ export async function getAllIllustrations(): Promise<Illustration[]> {
 }
 
 // 1件取得
-export async function getIllustration(id: number): Promise<Illustration | null> {
+export async function getIllustration(
+  id: number,
+): Promise<Illustration | null> {
   const { data, error } = await supabasePublic
     .from(TABLE)
     .select("*")
@@ -29,7 +31,7 @@ export async function getIllustration(id: number): Promise<Illustration | null> 
 // ---- 書き込み（管理画面・サーバー側のみ） ----
 
 export async function createIllustration(
-  input: IllustrationInput
+  input: IllustrationInput,
 ): Promise<Illustration> {
   const admin = createAdminClient();
   const { data, error } = await admin
@@ -43,7 +45,7 @@ export async function createIllustration(
 
 export async function updateIllustration(
   id: number,
-  input: Partial<IllustrationInput>
+  input: Partial<IllustrationInput>,
 ): Promise<Illustration> {
   const admin = createAdminClient();
   const { data, error } = await admin

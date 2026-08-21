@@ -19,10 +19,18 @@ export default function RootLayout({
           内容が永久に見えなくなる。ここで印を付け、CSS 側はこの印がある時だけ
           伏せる。描画前に実行する必要があるのでインラインで置いている。
         */}
-        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.className += ' fg-js';" }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "document.documentElement.className += ' fg-js';",
+          }}
+        />
 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
         {/*
           商用フォントの代替:
             Impact         → Anton（巨大数字・ロゴ）

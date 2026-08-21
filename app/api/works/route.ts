@@ -7,12 +7,19 @@ export async function POST(request: Request) {
   try {
     await requireUser(); // ログイン必須
     const body = await request.json();
-    const { title, description, image_url, production_date, image_width, image_height } = body;
+    const {
+      title,
+      description,
+      image_url,
+      production_date,
+      image_width,
+      image_height,
+    } = body;
 
     if (!title || !image_url) {
       return NextResponse.json(
         { error: "タイトルと画像は必須です" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
