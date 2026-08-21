@@ -30,8 +30,9 @@ export default function Pager({
   if (paged > 1) {
     items.push(
       <a key="prev" className="prev page-numbers" href={href(paged - 1)}>
-        <span aria-hidden="true">&#9664;&#9664;</span><em>REW</em>
-      </a>
+        <span aria-hidden="true">&#9664;&#9664;</span>
+        <em>REW</em>
+      </a>,
     );
   }
 
@@ -39,14 +40,28 @@ export default function Pager({
   for (let n = 1; n <= pages; n++) {
     if (n === paged) {
       items.push(
-        <span key={n} aria-current="page" className="page-numbers current">{n}</span>
+        <span key={n} aria-current="page" className="page-numbers current">
+          {n}
+        </span>,
       );
       dots = true;
-    } else if (n <= END_SIZE || (n >= paged - MID_SIZE && n <= paged + MID_SIZE) || n > pages - END_SIZE) {
-      items.push(<a key={n} className="page-numbers" href={href(n)}>{n}</a>);
+    } else if (
+      n <= END_SIZE ||
+      (n >= paged - MID_SIZE && n <= paged + MID_SIZE) ||
+      n > pages - END_SIZE
+    ) {
+      items.push(
+        <a key={n} className="page-numbers" href={href(n)}>
+          {n}
+        </a>,
+      );
       dots = true;
     } else if (dots) {
-      items.push(<span key={`d${n}`} className="page-numbers dots">&hellip;</span>);
+      items.push(
+        <span key={`d${n}`} className="page-numbers dots">
+          &hellip;
+        </span>,
+      );
       dots = false;
     }
   }
@@ -54,15 +69,19 @@ export default function Pager({
   if (paged < pages) {
     items.push(
       <a key="next" className="next page-numbers" href={href(paged + 1)}>
-        <span aria-hidden="true">&#9654;&#9654;</span><em>FF</em>
-      </a>
+        <span aria-hidden="true">&#9654;&#9654;</span>
+        <em>FF</em>
+      </a>,
     );
   }
 
   return (
     <nav className="fg-pager" aria-label="ページ送り">
       {items}
-      <span className="fg-pager__play" aria-hidden="true"><span>&#9654;</span><em>PLAY</em></span>
+      <span className="fg-pager__play" aria-hidden="true">
+        <span>&#9654;</span>
+        <em>PLAY</em>
+      </span>
     </nav>
   );
 }

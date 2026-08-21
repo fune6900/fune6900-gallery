@@ -34,7 +34,7 @@ const WP_BASE_URL = process.env.WP_BASE_URL!; // 例: http://52.192.212.55
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 const r2 = new S3Client({
@@ -80,10 +80,12 @@ async function main() {
     // 画像IDから、実ファイルのURL(guid)を引く
     const [imgRows] = await conn.execute<any[]>(
       "SELECT guid FROM wp_site1_posts WHERE ID = ? AND post_type='attachment'",
-      [row.image_id]
+      [row.image_id],
     );
     if (imgRows.length === 0) {
-      console.warn(`⚠️ 画像が見つかりません: 作品「${row.title}」(id=${row.post_id})`);
+      console.warn(
+        `⚠️ 画像が見つかりません: 作品「${row.title}」(id=${row.post_id})`,
+      );
       continue;
     }
     const guid: string = imgRows[0].guid;
@@ -110,7 +112,7 @@ async function main() {
         Key: key,
         Body: buffer,
         ContentType: contentType,
-      })
+      }),
     );
     const publicUrl = `${R2_PUBLIC_BASE}/${key}`;
 

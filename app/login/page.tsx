@@ -22,7 +22,9 @@ export default function LoginPage() {
     });
     setLoading(false);
     if (error) {
-      setError("ログインに失敗しました。メールアドレスかパスワードが違います。");
+      setError(
+        "ログインに失敗しました。メールアドレスかパスワードが違います。",
+      );
       return;
     }
     router.push("/admin");

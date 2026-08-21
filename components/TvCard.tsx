@@ -31,7 +31,11 @@ export default function TvCard({
   const year = work.production_date ? work.production_date.slice(0, 4) : "";
 
   return (
-    <a className={`fg-tv ${geo.className}`} style={style} href={`/works/${work.id}`}>
+    <a
+      className={`fg-tv ${geo.className}`}
+      style={style}
+      href={`/works/${work.id}`}
+    >
       <span className="fg-tv__img">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -45,18 +49,34 @@ export default function TvCard({
         />
       </span>
       <span className="fg-tv__line" aria-hidden="true" />
-      <span className="fg-tv__ch" aria-hidden="true">CH.{pad(channel, 2)}</span>
-      {year && <span className="fg-tv__yr" aria-hidden="true">{year}</span>}
+      <span className="fg-tv__ch" aria-hidden="true">
+        CH.{pad(channel, 2)}
+      </span>
+      {year && (
+        <span className="fg-tv__yr" aria-hidden="true">
+          {year}
+        </span>
+      )}
       <span className="fg-tv__cap">
         <span>
           <b className="jp-break">{work.title}</b>
           <i>
             NO.{pad(work.id, 3)}
-            {work.production_date && <>&nbsp;/&nbsp;{formatDate(work.production_date)}</>}
+            {work.production_date && (
+              <>&nbsp;/&nbsp;{formatDate(work.production_date)}</>
+            )}
           </i>
         </span>
-        <span className="fg-meter fg-meter--dark fg-meter--live" aria-hidden="true">
-          <i className="on" /><i className="on" /><i /><i className="on" /><i /><i />
+        <span
+          className="fg-meter fg-meter--dark fg-meter--live"
+          aria-hidden="true"
+        >
+          <i className="on" />
+          <i className="on" />
+          <i />
+          <i className="on" />
+          <i />
+          <i />
         </span>
       </span>
     </a>

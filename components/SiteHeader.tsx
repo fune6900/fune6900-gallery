@@ -24,7 +24,9 @@ export default function SiteHeader({
 }) {
   return (
     <>
-      <a className="skip-link" href="#fg-main">本文へスキップ</a>
+      <a className="skip-link" href="#fg-main">
+        本文へスキップ
+      </a>
 
       {/* 読み込みイントロ。砂嵐 → チャンネルが合う → 画面が開く */}
       <div className="fg-intro" id="fg-intro" aria-hidden="true">
@@ -32,9 +34,15 @@ export default function SiteHeader({
         <div className="fg-intro__roll" />
         <div className="fg-intro__scan" />
         <div className="fg-intro__hud">
-          <span className="fg-intro__ch" id="fg-intro-ch">CH.00</span>
-          <div className="fg-intro__bar"><i /></div>
-          <span className="fg-intro__msg" id="fg-intro-msg">NO SIGNAL</span>
+          <span className="fg-intro__ch" id="fg-intro-ch">
+            CH.00
+          </span>
+          <div className="fg-intro__bar">
+            <i />
+          </div>
+          <span className="fg-intro__msg" id="fg-intro-msg">
+            NO SIGNAL
+          </span>
         </div>
       </div>
 
@@ -46,23 +54,39 @@ export default function SiteHeader({
         </a>
 
         <nav className="fg-header__nav" aria-label="メインメニュー">
-          <a className={`fg-pill ${isGallery ? "fg-pill--on" : "fg-pill--ghost"}`} href="/">
+          <a
+            className={`fg-pill ${isGallery ? "fg-pill--on" : "fg-pill--ghost"}`}
+            href="/"
+          >
             ギャラリー
           </a>
         </nav>
 
         <span className="fg-header__sp" />
 
-        <a className="fg-pill fg-pill--lime" href="#fg-gallery">作品を見る</a>
+        <a className="fg-pill fg-pill--lime" href="#fg-gallery">
+          作品を見る
+        </a>
 
-        <button className="fg-header__icon" type="button"
-                aria-expanded="false" aria-controls="fg-searchbar"
-                aria-label="検索を開く">&#8981;</button>
+        <button
+          className="fg-header__icon"
+          type="button"
+          aria-expanded="false"
+          aria-controls="fg-searchbar"
+          aria-label="検索を開く"
+        >
+          &#8981;
+        </button>
 
-        <button className="fg-burger" type="button"
-                aria-expanded="false" aria-controls="fg-menu"
-                aria-label="メニュー">
-          <span /><span />
+        <button
+          className="fg-burger"
+          type="button"
+          aria-expanded="false"
+          aria-controls="fg-menu"
+          aria-label="メニュー"
+        >
+          <span />
+          <span />
         </button>
       </header>
 
@@ -72,7 +96,13 @@ export default function SiteHeader({
           <label className="fg-field fg-field--wide">
             <span aria-hidden="true">&#8981;</span>
             <span className="screen-reader-text">作品を検索</span>
-            <input type="search" name="s" defaultValue={s} placeholder="SEARCH..." autoComplete="off" />
+            <input
+              type="search"
+              name="s"
+              defaultValue={s}
+              placeholder="SEARCH..."
+              autoComplete="off"
+            />
           </label>
         </form>
       </div>
@@ -86,7 +116,13 @@ export default function SiteHeader({
           <label className="fg-field fg-field--wide">
             <span aria-hidden="true">&#8981;</span>
             <span className="screen-reader-text">作品を検索</span>
-            <input type="search" name="s" defaultValue={s} placeholder="SEARCH..." autoComplete="off" />
+            <input
+              type="search"
+              name="s"
+              defaultValue={s}
+              placeholder="SEARCH..."
+              autoComplete="off"
+            />
           </label>
         </form>
       </nav>
@@ -97,7 +133,9 @@ export default function SiteHeader({
         <b data-fg-roll>{pad(Math.max(1, paged), 2)}</b>
         <i>&#9197;</i>
         <span data-fg-roll>{pad(Math.max(1, pages), 2)}</span>
-        <div className="fg-sidenav__prog"><i /></div>
+        <div className="fg-sidenav__prog">
+          <i />
+        </div>
       </div>
     </>
   );

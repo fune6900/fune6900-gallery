@@ -5,7 +5,7 @@ import { updateIllustration, deleteIllustration } from "@/lib/queries";
 // 作品を更新
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     await requireUser();
@@ -23,7 +23,7 @@ export async function PUT(
 // 作品を削除
 export async function DELETE(
   _request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     await requireUser();

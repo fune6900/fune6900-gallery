@@ -15,7 +15,7 @@ dotenv.config({ path: ".env.local" });
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 type Size = { w: number; h: number };
@@ -29,7 +29,8 @@ function fromPng(b: Buffer): Size | null {
 }
 
 function fromGif(b: Buffer): Size | null {
-  if (b.length < 10 || b.subarray(0, 3).toString("latin1") !== "GIF") return null;
+  if (b.length < 10 || b.subarray(0, 3).toString("latin1") !== "GIF")
+    return null;
   return { w: b.readUInt16LE(6), h: b.readUInt16LE(8) };
 }
 
@@ -38,9 +39,19 @@ function fromJpeg(b: Buffer): Size | null {
 
   let i = 2;
   while (i + 9 < b.length) {
-    if (b[i] !== 0xff) { i++; continue; }        // マーカー境界を見失ったら詰める
+    if (b[i] !== 0xff) {
+      i++;
+      continue;
+    } // マーカー境界を見失ったら詰める
     const marker = b[i + 1];
-    if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) { i += 2; continue; }
+    if (
+      marker === 0xd8 ||
+      marker === 0x01 ||
+      (marker >= 0xd0 && marker <= 0xd7)
+    ) {
+      i += 2;
+      continue;
+    }
     const len = b.readUInt16BE(i + 2);
 
     // SOF0-3 / 5-7 / 9-11 / 13-15 に寸法が入っている（DHT等は除く）
@@ -51,7 +62,7 @@ function fromJpeg(b: Buffer): Size | null {
       (marker >= 0xcd && marker <= 0xcf);
 
     if (isSof) return { h: b.readUInt16BE(i + 5), w: b.readUInt16BE(i + 7) };
-    if (marker === 0xda) return null;             // 画像本体に入ったら諦める
+    if (marker === 0xda) return null; // 画像本体に入ったら諦める
     i += 2 + len;
   }
   return null;
@@ -118,7 +129,7 @@ async function main() {
     console.error("取得に失敗しました:", error.message);
     if (/image_width/.test(error.message)) {
       console.error(
-        "\n先に supabase-add-image-size.sql を Supabase の SQL Editor で実行してください。"
+        "\n先に supabase-add-image-size.sql を Supabase の SQL Editor で実行してください。",
       );
     }
     process.exit(1);

@@ -130,7 +130,7 @@ function WorkForm({
   const [title, setTitle] = useState(work?.title ?? "");
   const [description, setDescription] = useState(work?.description ?? "");
   const [productionDate, setProductionDate] = useState(
-    work?.production_date ?? ""
+    work?.production_date ?? "",
   );
   const [imageUrl, setImageUrl] = useState(work?.image_url ?? "");
   // 表側のグリッドはこの比からカードの行数を決めるので、
@@ -138,7 +138,7 @@ function WorkForm({
   const [size, setSize] = useState<{ w: number; h: number } | null>(
     work?.image_width && work?.image_height
       ? { w: work.image_width, h: work.image_height }
-      : null
+      : null,
   );
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);

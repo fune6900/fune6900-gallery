@@ -1,0 +1,31 @@
+# =============================================================
+#  Prettier の対象外
+#
+#  PostToolUse フック（.claude/hooks/post-tool-format.sh）が編集後に
+#  prettier を掛けるので、整形されると困るものはここで除外する。
+# =============================================================
+
+# 旧WordPressテーマからそのまま持ってきたもの。
+# 整形すると「原本と同一」でなくなり、再生成時に差分が出る。
+#   fune-gallery.css … テーマの src/scss/main.scss をコンパイルした結果
+#   fune-gallery.js  … テーマの assets/js/main.js（起動部分以外は無改変）
+app/fune-gallery.css
+public/fune-gallery.js
+
+# 旧WordPress一式（デザインの原本。こちらから触らない）
+docker-lamp/
+
+# テンプレートの clone 置き場
+agentic-tdd-starter-sets/
+
+# 生成物・移行データ
+.next/
+out/
+migration-data/
+package-lock.json
+
+# テンプレート（agentic-tdd-starter-sets）から持ってきた設定一式。
+# 上流の更新を差分で取り込めるよう、原本と同じ状態に保つ。
+# ※ CLAUDE.md / AGENTS.md はこのプロジェクト用に書き換えたので対象外にしない。
+.claude/
+.codex/

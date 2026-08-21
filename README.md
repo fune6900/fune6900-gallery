@@ -76,6 +76,7 @@ docker compose up -d --build
 - 管理: http://localhost:3000/admin （未ログインなら /login へ）
 
 ログを見る:
+
 ```bash
 docker compose logs -f app
 ```
@@ -109,7 +110,7 @@ R2 の画像のヘッダだけ読んで `image_width` / `image_height` を入れ
 4. Deploy
 
 ※ Vercelはビルド済みを配信するため、Dockerfileは使われない。
-   ローカル=Docker、本番=Vercel という分担。
+ローカル=Docker、本番=Vercel という分担。
 
 ### （代替）Vercelを使わず自前Dockerで公開する場合
 
@@ -168,12 +169,12 @@ DESIGN.md を読めばこちらのコードも読める。
 Next.js の App Router のファイル規約に置いてあるので、`<link rel="icon">` は
 自動で出力される（`app/layout.tsx` には書かない）。
 
-| ファイル | サイズ | 用途 |
-|---|---|---|
-| `app/favicon.ico` | 16 + 32 | 素の `/favicon.ico` を取りにくる古いクライアント向け |
-| `app/icon.png` | 32×32 | ブラウザのタブ |
-| `app/icon1.png` | 192×192 | 高解像度のブラウザ用アイコン（ブックマーク・高DPIのタブなど） |
-| `app/apple-icon.png` | 180×180 | iOS のホーム画面（`apple-touch-icon`。iOSはこれだけで効く） |
+| ファイル             | サイズ  | 用途                                                          |
+| -------------------- | ------- | ------------------------------------------------------------- |
+| `app/favicon.ico`    | 16 + 32 | 素の `/favicon.ico` を取りにくる古いクライアント向け          |
+| `app/icon.png`       | 32×32   | ブラウザのタブ                                                |
+| `app/icon1.png`      | 192×192 | 高解像度のブラウザ用アイコン（ブックマーク・高DPIのタブなど） |
+| `app/apple-icon.png` | 180×180 | iOS のホーム画面（`apple-touch-icon`。iOSはこれだけで効く）   |
 
 **Androidのホーム画面アイコンは、このリポジトリでは保証していない。**
 Chrome が正式に見るのは Web App Manifest の `icons` で、`<link rel="icon">` は
@@ -208,9 +209,9 @@ ICO コンテナに詰めただけのもの）。
 
 ## 現行サイトからの引き継ぎ（ACF → 新DB）
 
-| WordPress (ACF) | 新DB (illustrations) |
-|---|---|
-| title | title |
-| description | description |
-| main_image (画像ID) | image_url (R2のURL) |
+| WordPress (ACF)            | 新DB (illustrations)   |
+| -------------------------- | ---------------------- |
+| title                      | title                  |
+| description                | description            |
+| main_image (画像ID)        | image_url (R2のURL)    |
 | production_date (YYYYMMDD) | production_date (DATE) |

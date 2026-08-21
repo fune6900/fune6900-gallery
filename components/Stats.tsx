@@ -4,10 +4,16 @@
  */
 import type { CSSProperties } from "react";
 import {
-  getCount, getCountInYear, getFirstYear, getLastUpdated, getSpanYears, getYears, pad,
+  getCount,
+  getCountInYear,
+  getFirstYear,
+  getLastUpdated,
+  getSpanYears,
+  getYears,
+  pad,
 } from "@/lib/gallery";
 
-const delay = (ms: number) => ({ ["--in-delay"]: `${ms}ms` } as CSSProperties);
+const delay = (ms: number) => ({ ["--in-delay"]: `${ms}ms` }) as CSSProperties;
 
 // バーの割合。0 除算を避ける
 function pct(part: number, whole: number): number {
@@ -39,43 +45,76 @@ export default async function Stats({
     thisYear = await getCountInYear(yearKey);
   }
 
-  const yearLabel = new Date().getUTCFullYear() === yearKey ? "THIS YEAR" : "LATEST YEAR";
+  const yearLabel =
+    new Date().getUTCFullYear() === yearKey ? "THIS YEAR" : "LATEST YEAR";
 
   return (
     <div className="fg-bleed fg-stats">
       <div className="fg-stat fg-reveal fg-reveal--up" style={delay(0)}>
         <p className="fg-stat__k">TOTAL WORKS</p>
-        <p className="fg-stat__v" data-count={total}>0</p>
+        <p className="fg-stat__v" data-count={total}>
+          0
+        </p>
         <div className="fg-stat__foot">
-          <div className="fg-bar" data-bar="100"><i /></div>
+          <div className="fg-bar" data-bar="100">
+            <i />
+          </div>
           <span className="fg-stat__note">ALL</span>
         </div>
       </div>
 
-      <div className="fg-stat fg-stat--lime fg-reveal fg-reveal--diag" style={delay(80)}>
+      <div
+        className="fg-stat fg-stat--lime fg-reveal fg-reveal--diag"
+        style={delay(80)}
+      >
         <p className="fg-stat__k">{yearLabel}</p>
-        <p className="fg-stat__v" data-count={thisYear}><span>0</span><small>件</small></p>
+        <p className="fg-stat__v" data-count={thisYear}>
+          <span>0</span>
+          <small>件</small>
+        </p>
         <div className="fg-stat__foot">
-          <div className="fg-bar" data-bar={pct(thisYear, total)}><i /></div>
+          <div className="fg-bar" data-bar={pct(thisYear, total)}>
+            <i />
+          </div>
           <span className="fg-stat__note">{yearKey}</span>
         </div>
       </div>
 
       <div className="fg-stat fg-reveal fg-reveal--up" style={delay(160)}>
         <p className="fg-stat__k">ARCHIVE SPAN</p>
-        <p className="fg-stat__v" data-count={span}><span>0</span><small>年</small></p>
+        <p className="fg-stat__v" data-count={span}>
+          <span>0</span>
+          <small>年</small>
+        </p>
         <div className="fg-stat__foot">
-          <div className="fg-bar" data-bar={Math.min(100, span * 12)}><i /></div>
-          <span className="fg-stat__note">{first ? `SINCE ${first}` : "—"}</span>
+          <div className="fg-bar" data-bar={Math.min(100, span * 12)}>
+            <i />
+          </div>
+          <span className="fg-stat__note">
+            {first ? `SINCE ${first}` : "—"}
+          </span>
         </div>
       </div>
 
-      <div className="fg-stat fg-stat--ink fg-reveal fg-reveal--down" style={delay(240)}>
+      <div
+        className="fg-stat fg-stat--ink fg-reveal fg-reveal--down"
+        style={delay(240)}
+      >
         <p className="fg-stat__k">LAST UPDATE</p>
-        <p className="fg-stat__v">{updated.length >= 10 ? updated.slice(5) : updated}</p>
+        <p className="fg-stat__v">
+          {updated.length >= 10 ? updated.slice(5) : updated}
+        </p>
         <div className="fg-stat__foot">
-          <span className="fg-meter fg-meter--dark fg-meter--live" aria-hidden="true">
-            <i className="on" /><i className="on" /><i /><i className="on" /><i /><i />
+          <span
+            className="fg-meter fg-meter--dark fg-meter--live"
+            aria-hidden="true"
+          >
+            <i className="on" />
+            <i className="on" />
+            <i />
+            <i className="on" />
+            <i />
+            <i />
           </span>
           <span className="fg-stat__note">{updated.slice(0, 4)}</span>
         </div>
@@ -83,10 +122,17 @@ export default async function Stats({
 
       <div className="fg-stat fg-reveal fg-reveal--right" style={delay(320)}>
         <p className="fg-stat__k">ON AIR</p>
-        <p className="fg-stat__v" data-count={onAir}><span>0</span><small>ch</small></p>
+        <p className="fg-stat__v" data-count={onAir}>
+          <span>0</span>
+          <small>ch</small>
+        </p>
         <div className="fg-stat__foot">
-          <div className="fg-bar" data-bar={pct(paged, pages)}><i /></div>
-          <span className="fg-stat__note">PAGE {pad(paged, 2)} / {pad(pages, 2)}</span>
+          <div className="fg-bar" data-bar={pct(paged, pages)}>
+            <i />
+          </div>
+          <span className="fg-stat__note">
+            PAGE {pad(paged, 2)} / {pad(pages, 2)}
+          </span>
         </div>
       </div>
     </div>

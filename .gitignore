@@ -1,10 +1,49 @@
+# --- Node / Next ---
 /node_modules
 /.next
 /out
-.env.local
-.env*.local
-.DS_Store
-*.log
-.vercel
+dist/
+build/
+coverage/
+.cache/
 next-env.d.ts
+tsconfig.tsbuildinfo
+.vercel
+
+# --- Env ---
+.env
+.env.local
+.env.development
+.env.production
+.env*.local
+
+# --- Editor / OS ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# --- Claude Code / Codex（ローカル固有）---
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+.claude/knowledge-base/
+
+# テンプレートの clone 置き場。中身はルートにコピー済みなので追跡しない
+agentic-tdd-starter-sets/
+
+# --- Logs / temp ---
+*.log
+tmp/
+
+# --- 検証用スクリーンショット ---
+# テンプレートは `*.png` を全無視していたが、それだと app/ のファビコン
+# （icon.png / icon1.png / apple-icon.png）まで対象になってしまう。
+# 実際に散らかるのはリポジトリ直下と Playwright の出力先なので、そこだけ落とす。
+/*.png
+/*.jpeg
+.playwright-mcp/
+
+# --- 移行データ（WordPressのダンプと画像。巨大なので追跡しない）---
 migration-data/
