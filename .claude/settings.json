@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash $CLAUDE_PROJECT_DIR/.claude/hooks/pre-tool-guard.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-tool-guard.sh\""
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash $CLAUDE_PROJECT_DIR/.claude/hooks/post-tool-format.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-tool-format.sh\""
           }
         ]
       }
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash $CLAUDE_PROJECT_DIR/.claude/hooks/stop-quality-check.sh"
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-quality-check.sh\""
           }
         ]
       }
