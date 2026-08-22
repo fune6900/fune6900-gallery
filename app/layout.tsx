@@ -12,7 +12,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ja">
+    // 直下のインラインスクリプトが <html> に fg-js を足すため、
+    // サーバー出力（class 無し）とクライアント（class="fg-js"）が食い違う。
+    // これは意図した差分なので、この要素の属性についてだけ警告を止める。
+    // サーバー側で最初から付けてしまうと、JS が無い環境で本文が
+    // 永久に見えなくなる（下記のとおり）ので、その手は使えない。
+    <html lang="ja" suppressHydrationWarning>
       <head>
         {/*
           スクロール表示は opacity:0 から始まるので、JS が無い/失敗した環境では
@@ -21,7 +26,7 @@ export default function RootLayout({
         */}
         <script
           dangerouslySetInnerHTML={{
-            __html: "document.documentElement.className += ' fg-js';",
+            __html: "document.documentElement.classList.add('fg-js');",
           }}
         />
 

@@ -7,7 +7,7 @@
  *   fune_gallery_tv_geometry() → tvGeometry()
  *   ...
  *
- * 作品数が3桁のうちは、絞り込み以外（並び替え・シャッフル・年集計）を
+ * 作品数が3桁のうちは、絞り込み以外（並び替え・年集計）を
  * JS 側でやったほうが素直なので、そうしている。
  */
 import { cache } from "react";
@@ -19,19 +19,18 @@ const TABLE = "illustrations";
 // FUNE_GALLERY_PER_PAGE
 export const PER_PAGE = 24;
 
-export type Sort = "new" | "old" | "rand";
+export type Sort = "new" | "old";
 
 /** 画面から来る検索条件。URLのクエリ文字列と1対1。 */
 export type GalleryParams = {
   s: string;
   year: number;
   sort: Sort;
-  seed: number;
   paged: number;
 };
 
 /* =============================================================
- *  URL パラメータの解釈（fune_gallery_sort / _year / _seed）
+ *  URL パラメータの解釈（fune_gallery_sort / _year）
  * ============================================================= */
 
 function one(v: string | string[] | undefined): string {
@@ -43,17 +42,13 @@ export function readParams(
 ): GalleryParams {
   const sort = one(sp.sort);
   const year = parseInt(one(sp.y), 10);
-  const seed = parseInt(one(sp.seed), 10);
   const paged = parseInt(one(sp.paged), 10);
 
   return {
     s: one(sp.s).trim(),
     // 1970〜2999 の範囲外は「すべて」扱い
     year: year >= 1970 && year <= 2999 ? year : 0,
-    sort: sort === "old" || sort === "rand" ? sort : "new",
-    // SHUFFLE は seed を URL に固定する。素の乱数だとページを跨いだとき
-    // 同じ作品が重複して出る。
-    seed: seed > 0 ? seed : 0,
+    sort: sort === "old" ? sort : "new",
     paged: paged > 1 ? paged : 1,
   };
 }
@@ -75,11 +70,6 @@ export function galleryUrl(
     paged: null,
     ...overrides,
   };
-
-  // SHUFFLE は seed とセットでないと意味がない
-  if (args.sort === "rand") {
-    args.seed = current.seed || 1;
-  }
 
   const qs = new URLSearchParams();
   for (const [k, v] of Object.entries(args)) {
@@ -130,26 +120,6 @@ const fetchFiltered = cache(async function fetchFiltered(
   return (data ?? []) as Illustration[];
 });
 
-/** seed 固定の擬似乱数。同じ seed なら何度呼んでも同じ並びになる。 */
-function seededShuffle<T>(items: T[], seed: number): T[] {
-  let state = seed >>> 0 || 1;
-  const rand = () => {
-    // mulberry32
-    state = (state + 0x6d2b79f5) >>> 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-
-  const out = items.slice();
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
-}
-
 export type GalleryPage = {
   works: Illustration[];
   total: number;
@@ -161,12 +131,7 @@ export type GalleryPage = {
 export async function getGalleryPage(p: GalleryParams): Promise<GalleryPage> {
   const all = await fetchFiltered(p.s, p.year);
 
-  let ordered = all;
-  if (p.sort === "old") {
-    ordered = all.slice().reverse();
-  } else if (p.sort === "rand") {
-    ordered = seededShuffle(all, p.seed || 1);
-  }
+  const ordered = p.sort === "old" ? all.slice().reverse() : all;
 
   const total = ordered.length;
   const pages = Math.max(1, Math.ceil(total / PER_PAGE));
