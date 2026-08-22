@@ -8383,6 +8383,24 @@ a:hover {
     display: none;
   }
 }
+@media (max-width: 767px) {
+  .fg-hero {
+    padding-block: 28px 200px;
+  }
+  .fg-stage {
+    width: 230px;
+    height: 230px;
+  }
+  .fg-cube {
+    --s: 150px;
+    --half: 75px;
+  }
+  .fg-hero__ribbon {
+    top: auto;
+    bottom: 92px;
+    height: 124px;
+  }
+}
 .fg-stats {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
