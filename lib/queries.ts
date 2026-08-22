@@ -28,6 +28,22 @@ export async function getIllustration(
   return data as Illustration;
 }
 
+/**
+ * その画像URLを使っている作品が何件あるか。
+ *
+ * 画像をR2から消す前に確認する。移行時に同じ画像を指す行ができていたり、
+ * 手で同じURLを入れたりした場合に、他の作品の画像まで巻き添えで消さないため。
+ */
+export async function countByImageUrl(imageUrl: string): Promise<number> {
+  const admin = createAdminClient();
+  const { count, error } = await admin
+    .from(TABLE)
+    .select("id", { count: "exact", head: true })
+    .eq("image_url", imageUrl);
+  if (error) throw error;
+  return count ?? 0;
+}
+
 // ---- 書き込み（管理画面・サーバー側のみ） ----
 
 export async function createIllustration(
