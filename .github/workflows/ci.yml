@@ -1,0 +1,243 @@
+# =============================================================
+#  CI — 手作業でやっているチェックをそのまま機械にやらせる
+#
+#  ジョブは秘密情報の要否で分けてある。
+#    static-checks / guards / audit … シークレット不要。常に動く
+#    build                          … Supabase の値が要る（下記の理由）
+#
+#  build にだけ値が要るのは、/_not-found が静的生成される際に
+#  フッターが作品数と最終更新日を Supabase から取りに行くため。
+#  値が無いと "supabaseUrl is required" でビルドが落ちる。
+#  渡すのは anon キー（ブラウザにも配られる公開鍵）だけで、
+#  service_role キーは CI に置かない。
+# =============================================================
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+# 同じブランチに連続で push したら、古い実行は捨てる
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  # -----------------------------------------------------------
+  #  型・Lint・整形。シークレット不要
+  # -----------------------------------------------------------
+  static-checks:
+    name: 型 / Lint / 整形
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      # 以降は1つ落ちても残りを走らせる。まとめて直せるように。
+      - name: 型チェック（tsc --noEmit）
+        run: npm run typecheck
+
+      - name: Lint（next lint）
+        if: always()
+        run: npm run lint
+
+      - name: 整形の確認（prettier --check）
+        if: always()
+        run: npm run format:check
+
+  # -----------------------------------------------------------
+  #  プロジェクト固有の禁止事項。checkout だけで済むので速い
+  # -----------------------------------------------------------
+  guards:
+    name: 規約ガード
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 保護ファイルの変更検知に、base との差分が要る
+          fetch-depth: 0
+
+      - name: conventions.md / security.md の禁止事項
+        run: |
+          set -uo pipefail
+          FAILED=0
+          SRC="app components lib middleware.ts"
+
+          # --- any 禁止（conventions.md）---
+          # scripts/ も対象。any は全面禁止。
+          if HITS=$(grep -rnE ':[[:space:]]*any\b|<any>|as any' \
+                      --include='*.ts' --include='*.tsx' $SRC scripts 2>/dev/null); then
+            echo "::error::any が使われています。unknown で受けて型ガードしてください。"
+            echo "$HITS"
+            FAILED=1
+          fi
+
+          # --- console.log 禁止（conventions.md）---
+          # scripts/ は CLI なので進捗表示を許す。
+          if HITS=$(grep -rn 'console\.log' \
+                      --include='*.ts' --include='*.tsx' $SRC 2>/dev/null); then
+            echo "::error::console.log が残っています。デバッグ後は消してください（scripts/ は対象外）。"
+            echo "$HITS"
+            FAILED=1
+          fi
+
+          # --- TODO / FIXME 禁止（conventions.md）---
+          if HITS=$(grep -rnE '\bTODO\b|\bFIXME\b' \
+                      --include='*.ts' --include='*.tsx' $SRC scripts 2>/dev/null); then
+            echo "::error::TODO / FIXME が含まれています。ISSUE に起票してから消してください。"
+            echo "$HITS"
+            FAILED=1
+          fi
+
+          # --- .env のコミット禁止（security.md）---
+          # .env.example はキー名だけを書く雛形なので security.md でも推奨されている。
+          # 値を持つ .env / .env.local / .env.production などだけを弾く。
+          if HITS=$(git ls-files | grep -E '(^|/)\.env($|\.)' | grep -v '\.example$' || true); [ -n "$HITS" ]; then
+            echo "::error::.env 系ファイルが追跡されています。"
+            echo "$HITS"
+            FAILED=1
+          fi
+
+          # --- 検証用スクショの残骸（dev-flow.md 7-1）---
+          # app/ のファビコンは正規のアセットなので、リポジトリ直下だけを見る。
+          if HITS=$(git ls-files | grep -E '^[^/]+\.(png|jpe?g)$' || true); [ -n "$HITS" ]; then
+            echo "::error::リポジトリ直下に画像が残っています。検証用スクショは消してください。"
+            echo "$HITS"
+            FAILED=1
+          fi
+
+          [ "$FAILED" -eq 0 ] && echo "✅ 規約ガード：指摘なし"
+          exit $FAILED
+
+      - name: 編集禁止ファイルの変更を知らせる
+        if: github.event_name == 'pull_request'
+        run: |
+          set -uo pipefail
+
+          # 旧テーマの原本そのもの。整形や手直しをすると「原本と同一」でなくなる。
+          # ただし SCSS を直して再生成した場合は正当に変わるので、落とさずに知らせるだけ。
+          PROTECTED="app/fune-gallery.css public/fune-gallery.js"
+
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}" 2>/dev/null || true
+          CHANGED=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" 2>/dev/null || true)
+
+          HIT=""
+          for f in $PROTECTED; do
+            echo "$CHANGED" | grep -qx "$f" && HIT="$HIT $f"
+          done
+
+          if [ -n "$HIT" ]; then
+            echo "::warning::編集禁止ファイルが変更されています:$HIT"
+            {
+              echo "### ⚠ 編集禁止ファイルが変更されています"
+              echo
+              for f in $HIT; do echo "- \`$f\`"; done
+              echo
+              echo "これらは旧WordPressテーマの原本そのものです。"
+              echo "**SCSS を直して再生成した結果なら問題ありません。**"
+              echo "手で編集した場合は元に戻し、\`src/scss/\` 側を直してください。"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "✅ 編集禁止ファイルに変更なし"
+          fi
+
+  # -----------------------------------------------------------
+  #  ビルド。ここだけ Supabase の値が要る
+  # -----------------------------------------------------------
+  build:
+    name: ビルド
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: シークレットの確認
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "${SUPABASE_URL}" ] || [ -z "${SUPABASE_ANON_KEY}" ]; then
+            echo "::error::SUPABASE_URL / SUPABASE_ANON_KEY が未設定です。"
+            echo "::error::/_not-found は静的生成され、その際フッターが Supabase を参照します。"
+            echo "::error::Settings → Secrets and variables → Actions で登録してください。"
+            exit 1
+          fi
+          echo "✅ シークレットあり"
+
+      - name: ビルド
+        env:
+          # コード側は NEXT_PUBLIC_ 付きの名前で読むので、ここで渡し替える
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: npm run build
+
+  # -----------------------------------------------------------
+  #  依存の脆弱性。いまは既に赤なので落とさず報告だけする
+  # -----------------------------------------------------------
+  audit:
+    name: 依存の脆弱性（非ブロッキング）
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # 現状 next 15.1 系に critical/high の勧告が出ており、常に赤になる。
+    # 上げると表側のデザインに影響しうるので、別途対応する。
+    # ここを外せるようになったら continue-on-error を消して必須化すること。
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: npm audit
+        run: |
+          set -uo pipefail
+          npm audit --audit-level=high --json > audit.json || true
+
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          try:
+              d = json.load(open("audit.json"))
+          except Exception:
+              print("### npm audit の結果を読めませんでした"); raise SystemExit(0)
+
+          vulns = d.get("vulnerabilities", {})
+          bad = {k: v for k, v in vulns.items() if v.get("severity") in ("high", "critical")}
+
+          if not bad:
+              print("### ✅ high / critical の脆弱性はありません")
+              raise SystemExit(0)
+
+          print("### ⚠ high / critical の脆弱性")
+          print()
+          print("| パッケージ | 深刻度 | 修正 |")
+          print("|---|---|---|")
+          for name, v in sorted(bad.items(), key=lambda x: x[1]["severity"], reverse=True):
+              fix = v.get("fixAvailable")
+              fix = f"`{fix['name']}@{fix['version']}`" if isinstance(fix, dict) else ("あり" if fix else "なし")
+              print(f"| `{name}` | **{v['severity']}** | {fix} |")
+          PY
+
+          npm audit --audit-level=high || true
