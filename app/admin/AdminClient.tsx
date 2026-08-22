@@ -252,6 +252,32 @@ function WorkForm({
 
   const dateRef = useRef<HTMLInputElement>(null);
 
+  // 画像を選ぶと即座にR2へ上がる。保存せずに閉じたり差し替えたりすると
+  // 誰も使わないファイルが残るので、この画面で上げたぶんは控えておく。
+  // 元から作品に付いていた画像は対象にしない。
+  const uploadedHere = useRef<Set<string>>(new Set());
+
+  // 使われないまま終わった画像を捨てる。掃除なので失敗しても黙って進む。
+  async function discardUpload(url: string) {
+    if (!url || !uploadedHere.current.has(url)) return;
+    uploadedHere.current.delete(url);
+    try {
+      await fetch("/api/upload", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+    } catch {
+      // R2に残るだけなので画面は止めない
+    }
+  }
+
+  function handleClose() {
+    // 上げたが保存しなかったものを片付けてから閉じる
+    void discardUpload(imageUrl);
+    onClose();
+  }
+
   function openCalendar() {
     const el = dateRef.current;
     if (!el) return;
@@ -289,8 +315,13 @@ function WorkForm({
     }
 
     const { url } = await res.json();
+
+    // 直前にこの画面で上げた画像があれば、もう使わないので捨てる
+    const previous = imageUrl;
+    uploadedHere.current.add(url);
     setImageUrl(url);
     setSize(await measure(file));
+    if (previous && previous !== url) void discardUpload(previous);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -339,6 +370,8 @@ function WorkForm({
       return;
     }
 
+    // 保存できたので、この画面で上げたものはもう掃除の対象にしない
+    uploadedHere.current.clear();
     onSaved(await res.json());
   }
 
@@ -349,7 +382,7 @@ function WorkForm({
       aria-modal="true"
       aria-label={work ? "作品を編集" : "作品を追加"}
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget) handleClose();
       }}
     >
       <div className="ad-modal__box">
@@ -480,7 +513,7 @@ function WorkForm({
             <button
               type="button"
               className="fg-btn fg-btn--outline"
-              onClick={onClose}
+              onClick={handleClose}
             >
               キャンセル
             </button>
