@@ -5,6 +5,7 @@
 import type { CSSProperties } from "react";
 import type { Illustration } from "@/lib/types";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
+import { SIZES_CUBE, WorkImage } from "./WorkImage";
 
 const FACES = ["front", "back", "right", "left", "top", "bottom"] as const;
 
@@ -157,8 +158,7 @@ export default function Hero({ cube }: { cube: Illustration[] }) {
                     key={face}
                     className={`fg-cube__face fg-cube__face--${face}`}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={work.image_url} alt="" loading="lazy" />
+                    <WorkImage work={work} sizes={SIZES_CUBE} alt="" />
                   </div>
                 );
               })}
