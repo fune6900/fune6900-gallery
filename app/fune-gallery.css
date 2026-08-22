@@ -9638,6 +9638,33 @@ a:hover {
   flex-wrap: wrap;
 }
 
+.ad__filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.ad__filters__sp {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .ad__filters {
+    gap: 8px;
+  }
+  .ad__filters .fg-field {
+    width: 100%;
+  }
+  .ad__filters .fg-field input {
+    width: 100%;
+  }
+  .ad__filters .ad__filters__sp {
+    display: none;
+  }
+}
 .ad__list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
@@ -9805,6 +9832,108 @@ a:hover {
   border-radius: var(--r-md);
 }
 
+.ad-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 300;
+  width: min(360px, 100vw - 32px);
+  overflow: hidden;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 0 var(--r-md) 0 var(--r-md);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.28);
+  animation: ad-toast-in 0.42s var(--ease) backwards;
+}
+
+@keyframes ad-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(64px, -44px) rotate(4deg);
+  }
+}
+.ad-toast__body {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 12px 12px 14px;
+}
+
+.ad-toast__mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--lime);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.ad-toast__text {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.ad-toast__close {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s var(--ease);
+}
+.ad-toast__close:hover {
+  background: var(--lime);
+  color: var(--ink);
+}
+
+.ad-toast__gauge {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.16);
+}
+.ad-toast__gauge i {
+  display: block;
+  height: 100%;
+  background: var(--lime);
+  transform-origin: left center;
+  animation: ad-toast-gauge var(--toast-dur, 4000ms) linear forwards;
+}
+
+@keyframes ad-toast-gauge {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+@media (max-width: 767px) {
+  .ad-toast {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ad-toast {
+    animation: none;
+  }
+}
 .ad-modal {
   position: fixed;
   inset: 0;

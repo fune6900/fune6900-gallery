@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 // 組み込みの Image（measure() で使っている）と名前がぶつかるので別名にする
 import NextImage from "next/image";
 import { useRouter } from "next/navigation";
@@ -10,6 +11,29 @@ import {
   fieldErrors,
   type Illustration,
 } from "@/lib/types";
+
+// フラッシュメッセージを出しておく時間。ゲージの長さもこの値で決まる。
+const TOAST_MS = 4000;
+
+type AdminSort = "new" | "old" | "id";
+
+// 表側の並び順の言い回しに合わせつつ、管理画面でしか要らない「登録順」を足す。
+// 追加したばかりの作品を探すのに、制作日より登録の新しさのほうが役に立つ。
+const SORTS: Array<[AdminSort, string]> = [
+  ["new", "制作日が新しい順"],
+  ["old", "制作日が古い順"],
+  ["id", "登録が新しい順"],
+];
+
+/** 制作日で並べる。空の作品は末尾にまとめる（表側に出ないもの同士で固まる）。 */
+function byDate(a: Illustration, b: Illustration, asc: boolean): number {
+  const da = a.production_date ?? "";
+  const db = b.production_date ?? "";
+  if (da === db) return b.id - a.id;
+  if (da === "") return 1;
+  if (db === "") return -1;
+  return asc ? da.localeCompare(db) : db.localeCompare(da);
+}
 
 export default function AdminClient({
   initialWorks,
@@ -21,7 +45,45 @@ export default function AdminClient({
   const [editing, setEditing] = useState<Illustration | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [deleting, setDeleting] = useState<Illustration | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  // 同じ文言が続いたときも出し直せるよう、id を持たせて key に使う
+  const [notice, setNotice] = useState<{ id: number; text: string } | null>(
+    null,
+  );
+  const noticeSeq = useRef(0);
+
+  // 検索と並び替え。127件ほどなので手元で絞る。サーバーに問い合わせない。
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<AdminSort>("new");
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const filtered = q
+      ? works.filter(
+          (w) =>
+            w.title.toLowerCase().includes(q) ||
+            (w.description ?? "").toLowerCase().includes(q) ||
+            String(w.id).includes(q),
+        )
+      : works;
+
+    const sorted = [...filtered];
+    if (sort === "id") sorted.sort((a, b) => b.id - a.id);
+    else sorted.sort((a, b) => byDate(a, b, sort === "old"));
+    return sorted;
+  }, [works, query, sort]);
+
+  function showNotice(text: string) {
+    noticeSeq.current += 1;
+    setNotice({ id: noticeSeq.current, text });
+  }
+
+  // 消えるまでの時間はこのタイマーが持つ。ゲージの見た目は CSS 側だが、
+  // 秒数は --toast-dur として同じ値を渡しているのでずれない。
+  useEffect(() => {
+    if (!notice) return;
+    const t = setTimeout(() => setNotice(null), TOAST_MS);
+    return () => clearTimeout(t);
+  }, [notice]);
 
   async function handleLogout() {
     const supabase = createBrowserSupabase();
@@ -37,9 +99,9 @@ export default function AdminClient({
     const res = await fetch(`/api/works/${target.id}`, { method: "DELETE" });
     if (res.ok) {
       setWorks((w) => w.filter((x) => x.id !== target.id));
-      setNotice(`「${target.title}」を削除しました`);
+      showNotice(`「${target.title}」を削除しました`);
     } else {
-      setNotice("削除に失敗しました");
+      showNotice("削除に失敗しました");
     }
   }
 
@@ -77,22 +139,83 @@ export default function AdminClient({
         </div>
       </div>
 
-      <div className="fg-gauge" style={{ marginBottom: 18 }}>
-        <span>WORKS</span>
-        <b>{works.length}</b>
+      <div className="ad__filters">
+        <label className="fg-field">
+          <span aria-hidden="true">&#8981;</span>
+          <span className="screen-reader-text">作品を検索</span>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="タイトル / 説明 / NO."
+            autoComplete="off"
+          />
+        </label>
+
+        <label className="screen-reader-text" htmlFor="ad-sort">
+          並び替え
+        </label>
+        <select
+          className="fg-select"
+          id="ad-sort"
+          value={sort}
+          onChange={(e) => setSort(e.target.value as AdminSort)}
+        >
+          {SORTS.map(([key, label]) => (
+            <option key={key} value={key}>
+              {label}
+            </option>
+          ))}
+        </select>
+
+        <span className="ad__filters__sp" />
+
+        <div className="fg-gauge">
+          <span>WORKS</span>
+          <b>{visible.length}</b>
+          {visible.length !== works.length && <span>/ {works.length}</span>}
+        </div>
       </div>
 
       {notice && (
-        <p className="fg-sticker fg-sticker--lime" style={{ marginBottom: 16 }}>
-          {notice}
-        </p>
+        <div
+          // id を key にすることで、続けて出したときにも滑り込みと
+          // ゲージが最初からやり直される
+          key={notice.id}
+          className="ad-toast"
+          role="status"
+          aria-live="polite"
+          style={{ ["--toast-dur"]: `${TOAST_MS}ms` } as CSSProperties}
+        >
+          <div className="ad-toast__body">
+            <span className="ad-toast__mark" aria-hidden="true">
+              &#10003;
+            </span>
+            <p className="ad-toast__text">{notice.text}</p>
+            <button
+              type="button"
+              className="ad-toast__close"
+              onClick={() => setNotice(null)}
+              aria-label="閉じる"
+            >
+              &#10005;
+            </button>
+          </div>
+          <div className="ad-toast__gauge" aria-hidden="true">
+            <i />
+          </div>
+        </div>
       )}
 
-      {works.length === 0 ? (
-        <p className="ad__empty">まだ作品がありません。</p>
+      {visible.length === 0 ? (
+        <p className="ad__empty">
+          {works.length === 0
+            ? "まだ作品がありません。"
+            : `「${query}」に当てはまる作品がありません。`}
+        </p>
       ) : (
         <div className="ad__list">
-          {works.map((work) => {
+          {visible.map((work) => {
             const openEdit = () => {
               setEditing(work);
               setShowForm(true);
@@ -171,7 +294,7 @@ export default function AdminClient({
                 : [saved, ...w];
             });
             setShowForm(false);
-            setNotice(`「${saved.title}」を保存しました`);
+            showNotice(`「${saved.title}」を保存しました`);
           }}
         />
       )}
