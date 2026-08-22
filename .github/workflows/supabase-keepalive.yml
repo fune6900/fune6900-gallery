@@ -1,0 +1,92 @@
+# =============================================================
+#  Supabase の自動一時停止を回避する
+#
+#  無料プランのプロジェクトは、7日間アクティビティが無いと停止される。
+#  停止されるとサイトが作品を取得できなくなるので、定期的に実クエリを投げる。
+#
+#  静的アセットへの疎通確認では不十分。Postgres まで届くリクエストでないと
+#  アクティビティとして数えられないので、PostgREST に SELECT を投げている。
+#
+#  ⚠ GitHub は、60日間コミットが無いリポジトリのスケジュール実行を自動で無効化する。
+#     静かなリポジトリほどこの対策が要るのに、そこで止まる。無効化の前に通知メールが
+#     来るので、届いたら Actions タブから再有効化すること。
+# =============================================================
+name: Supabase keepalive
+
+on:
+  schedule:
+    # 毎日 03:17 UTC（= 12:17 JST）。
+    # 7日の猶予に対して毎日にしているのは、GitHub の cron が遅延・スキップされる
+    # ことがあるため。数回落ちても間に合うようにしておく。
+    # 分を 0 にしないのは、毎時ちょうどは混んで遅延しやすいから。
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+# 同時に走らせる意味がないので、重なったら古い方を捨てる
+concurrency:
+  group: supabase-keepalive
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Supabase に SELECT を投げる
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_URL}" ] || [ -z "${SUPABASE_ANON_KEY}" ]; then
+            echo "::error::SUPABASE_URL / SUPABASE_ANON_KEY が未設定です。"
+            echo "::error::Settings → Secrets and variables → Actions で登録してください。"
+            exit 1
+          fi
+
+          ENDPOINT="${SUPABASE_URL}/rest/v1/illustrations?select=id&limit=1"
+
+          # 一時的なネットワーク不調で落とさないよう3回まで試す
+          for attempt in 1 2 3; do
+            echo "attempt ${attempt}/3"
+
+            # 前の試行の応答を消しておく。curl が接続前に落ちるとファイルが
+            # 更新されず、古い本文をそのまま出して原因を見誤る。
+            : > /tmp/response.json
+
+            HTTP_CODE=$(curl --silent --show-error \
+              --max-time 30 \
+              --output /tmp/response.json \
+              --write-out '%{http_code}' \
+              --header "apikey: ${SUPABASE_ANON_KEY}" \
+              --header "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+              --header "Accept: application/json" \
+              "${ENDPOINT}") || HTTP_CODE="000"
+
+            # 200 かつ JSON 配列が返っていることまで確かめる。
+            # 停止中のプロジェクトはエラーページを返すので、ステータスだけでは足りない。
+            if [ "${HTTP_CODE}" = "200" ] && head -c 1 /tmp/response.json | grep -q '\['; then
+              echo "✅ 応答あり（HTTP ${HTTP_CODE}）"
+              echo "### ✅ Supabase は起きています" >> "$GITHUB_STEP_SUMMARY"
+              echo "- endpoint: \`/rest/v1/illustrations?select=id&limit=1\`" >> "$GITHUB_STEP_SUMMARY"
+              echo "- status: \`${HTTP_CODE}\`" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+
+            echo "失敗（HTTP ${HTTP_CODE}）"
+            # 応答本文は原因の手がかりになるが、長いと読みにくいので頭だけ出す。
+            # anon キーは公開鍵とはいえ、ログに残さないようリクエスト側は出さない。
+            head -c 300 /tmp/response.json || true
+            echo
+
+            [ "${attempt}" -lt 3 ] && sleep 15
+          done
+
+          echo "::error::Supabase に到達できませんでした（最後の HTTP ${HTTP_CODE}）。"
+          echo "::error::プロジェクトが既に停止しているか、anon キーが失効している可能性があります。"
+          echo "### ❌ Supabase に到達できませんでした" >> "$GITHUB_STEP_SUMMARY"
+          echo "- 最後のHTTPステータス: \`${HTTP_CODE}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- ダッシュボードで一時停止していないか、キーが有効か確認してください。" >> "$GITHUB_STEP_SUMMARY"
+          exit 1
