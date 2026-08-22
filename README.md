@@ -6,6 +6,7 @@ WordPressから脱却した、Next.js + Supabase + Cloudflare R2 のギャラリ
 ## 構成
 
 - **Next.js 15 (App Router) + TypeScript** — アプリ本体（表側 + 管理画面）
+- **Zod** — 入力バリデーション（画面とAPIで同じスキーマを使う）
 - **Supabase** — データベース（作品情報）+ 認証（管理画面ログイン）
 - **Cloudflare R2** — 画像ストレージ（転送量無料）
 - **Docker** — ローカル開発環境

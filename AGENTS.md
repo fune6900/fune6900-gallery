@@ -14,12 +14,13 @@ Cloudflare R2 に移行した。**表側の見た目は旧WordPressテーマ `fu
 ## スタック
 
 - コア: Next.js 15 (App Router)、React 19、TypeScript
-- スタイル: 表側は旧テーマのコンパイル済みCSS / 管理画面のみ Tailwind
+- スタイル: `styles/scss/` から生成した1枚のCSS（表側・管理画面で共用）
 - データベース・認証: Supabase（Postgres + Auth）
 - ストレージ: Cloudflare R2（S3互換）
 - ホスティング: Vercel（ローカル開発は Docker）
 
-**使っていないもの**: Prisma / TanStack Query / Zod。あるつもりで書かないこと。
+**使っていないもの**: Prisma / TanStack Query / Tailwind CSS。
+Zod は入力バリデーションに使っている（`lib/types.ts`）。
 
 ### テストについて
 

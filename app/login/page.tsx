@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabase } from "@/lib/supabase-browser";
+import { SITE_NAME } from "@/lib/site";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function LoginPage() {
     });
     setLoading(false);
     if (error) {
+      // 「どちらが違うか」は明かさない（総当たりの手がかりになる）
       setError(
         "ログインに失敗しました。メールアドレスかパスワードが違います。",
       );
@@ -32,42 +34,63 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-4">
-      <h1 className="mb-6 text-2xl font-bold">管理ログイン</h1>
-      <form onSubmit={handleLogin} className="space-y-4">
-        <div>
-          <label className="mb-1 block text-sm text-neutral-400">
-            メールアドレス
-          </label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2"
-          />
+    <main className="ad-login">
+      <div className="ad-login__box">
+        <p className="ad-login__brand">F6900</p>
+        <div className="fg-shead fg-shead--sm" style={{ marginBlock: 14 }}>
+          <div className="fg-shead__block">
+            <p className="fg-shead__jp">管理ログイン</p>
+            <p className="fg-shead__en">SIGN IN</p>
+          </div>
         </div>
-        <div>
-          <label className="mb-1 block text-sm text-neutral-400">
-            パスワード
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2"
-          />
-        </div>
-        {error && <p className="text-sm text-red-400">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-md bg-accent px-4 py-2 font-medium text-black disabled:opacity-50"
-        >
-          {loading ? "ログイン中..." : "ログイン"}
-        </button>
-      </form>
+
+        <form className="ad-form" onSubmit={handleLogin}>
+          <div>
+            <label className="ad-field__label" htmlFor="lg-mail">
+              メールアドレス
+            </label>
+            <input
+              id="lg-mail"
+              className="ad-input"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="username"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="ad-field__label" htmlFor="lg-pass">
+              パスワード
+            </label>
+            <input
+              id="lg-pass"
+              className="ad-input"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
+            />
+          </div>
+
+          {error && <p className="ad-field__error">{error}</p>}
+
+          <button
+            type="submit"
+            className="fg-btn fg-btn--lime"
+            style={{ width: "100%", justifyContent: "center" }}
+            disabled={loading}
+          >
+            {loading ? "ログイン中..." : "ログイン"}
+          </button>
+        </form>
+
+        <p className="ad-field__hint" style={{ marginTop: 18 }}>
+          {SITE_NAME}
+        </p>
+      </div>
     </main>
   );
 }

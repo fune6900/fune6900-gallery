@@ -84,7 +84,7 @@ git checkout -b feat/<issue番号>-<機能名の短縮>
 
 **参照**: `@.claude/rules/agents.md`
 
-- 図案のメイド（Designer）が Tailwind CSS でスタイリングする
+- 図案のメイド（Designer）が `styles/scss/` でスタイリングし `npm run css` で再生成する
 
 ### 4-5. 品質評価（Evaluator）【必須】
 

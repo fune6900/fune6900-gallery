@@ -1,0 +1,412 @@
+// =============================================================
+//  管理画面
+//
+//  表側と同じ言語で作る。地はコンクリート、UIは黒、差し色はライム。
+//  ボタン・入力欄・パネルは表側の .fg-btn / .fg-field / .fg-panel を
+//  そのまま使い、ここでは管理画面固有の並びだけを足す。
+// =============================================================
+
+.ad {
+  min-height: 100vh;
+  padding-block: 28px 80px;
+}
+
+// --- 見出し行 -------------------------------------------------
+.ad__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.ad__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+// --- 作品の一覧 -----------------------------------------------
+.ad__list {
+  display: grid;
+  gap: 10px;
+}
+
+.ad__row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background: var(--card);
+  border: 3px solid var(--ink);
+  border-radius: var(--r-md);
+  transition: border-color 0.15s var(--ease);
+
+  &:hover {
+    border-color: var(--lime);
+  }
+}
+
+.ad__thumb {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 30%;
+  }
+}
+
+.ad__meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.ad__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ad__sub {
+  margin: 2px 0 0;
+  color: var(--ink-3);
+  @include dot-label(9px);
+}
+
+.ad__rowbtns {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+
+// 一覧の行に置く小さいボタン
+.ad__mini {
+  height: 32px;
+  padding: 0 14px;
+  border: 3px solid var(--ink);
+  border-radius: var(--r-pill);
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--f-jp);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  @include solid(var(--ink), 3px);
+
+  &:hover {
+    background: var(--lime);
+  }
+
+  &--danger {
+    border-color: #c0392b;
+    color: #c0392b;
+    @include solid(#c0392b, 3px);
+
+    &:hover {
+      background: #c0392b;
+      color: #fff;
+    }
+  }
+}
+
+// --- 空状態 ---------------------------------------------------
+.ad__empty {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--ink-3);
+  border: 3px dashed rgba(0, 0, 0, 0.2);
+  border-radius: var(--r-md);
+}
+
+// =============================================================
+//  モーダル（フォーム / 削除確認）
+// =============================================================
+.ad-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.ad-modal__box {
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 26px;
+  background: var(--card);
+  border: 3px solid var(--ink);
+  // 表側の見出しと同じ非対称の角丸
+  border-radius: 0 var(--r-lg) 0 var(--r-lg);
+
+  &--sm {
+    max-width: 420px;
+  }
+}
+
+.ad-modal__title {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.ad-modal__lead {
+  margin: 0 0 20px;
+  color: var(--ink-3);
+  @include stencil(11px, 0.16em);
+}
+
+.ad-modal__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+// =============================================================
+//  フォーム
+// =============================================================
+.ad-form {
+  display: grid;
+  gap: 18px;
+}
+
+.ad-field__label {
+  display: block;
+  margin-bottom: 6px;
+  @include dot-label(10px, 0.12em);
+  color: var(--ink-2);
+}
+
+.ad-field__req {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  color: var(--lime);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  vertical-align: 1px;
+}
+
+// 入力欄。表側の .fg-field は1行ぶんの丸い枠なので、
+// 複数行や日付には合わない。ここは四角い枠で揃える。
+.ad-input,
+.ad-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 3px solid var(--ink);
+  border-radius: var(--r-sm);
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--f-jp);
+  font-size: 14px;
+  font-weight: 500;
+
+  &::placeholder {
+    color: var(--ink-3);
+  }
+
+  &:focus {
+    outline: 3px solid var(--lime);
+    outline-offset: 1px;
+  }
+}
+
+.ad-textarea {
+  min-height: 110px;
+  resize: vertical;
+  line-height: 1.7;
+}
+
+// 入力に問題がある欄
+.ad-input--bad,
+.ad-textarea--bad {
+  border-color: #c0392b;
+}
+
+.ad-field__error {
+  margin: 6px 0 0;
+  color: #c0392b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ad-field__hint {
+  margin: 6px 0 0;
+  color: var(--ink-3);
+  font-size: 11px;
+}
+
+// --- 制作日 ---------------------------------------------------
+//
+// type="date" のままだと、ブラウザ既定のカレンダーアイコンが小さく
+// 目立たない。押せることが分かるよう、横にライムのボタンを置いて
+// showPicker() でカレンダーを開く。
+.ad-date {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.ad-date .ad-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.ad-date__btn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  border: 3px solid var(--ink);
+  border-radius: var(--r-sm);
+  background: var(--lime);
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  @include solid(var(--ink), 3px);
+
+  &:hover {
+    background: var(--lime-2);
+  }
+}
+
+// --- 画像 -----------------------------------------------------
+.ad-image {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.ad-image__preview {
+  flex: none;
+  width: 108px;
+  height: 108px;
+  overflow: hidden;
+  background: var(--bg);
+  border: 3px solid var(--ink);
+  border-radius: var(--r-sm);
+  display: grid;
+  place-items: center;
+  color: var(--ink-3);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 30%;
+  }
+
+  span {
+    @include dot-label(8px);
+  }
+}
+
+.ad-image__side {
+  flex: 1;
+  min-width: 0;
+}
+
+// ファイル選択。既定の見た目はテーマに合わないので、
+// ボタン部分だけ差し替える。
+.ad-file {
+  width: 100%;
+  font-family: var(--f-jp);
+  font-size: 12px;
+  color: var(--ink-2);
+
+  &::file-selector-button {
+    margin-right: 10px;
+    height: 34px;
+    padding: 0 16px;
+    border: 3px solid var(--ink);
+    border-radius: var(--r-pill);
+    background: #fff;
+    color: var(--ink);
+    font-family: var(--f-jp);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  &::file-selector-button:hover {
+    background: var(--lime);
+  }
+}
+
+// --- 削除確認 -------------------------------------------------
+.ad-confirm__target {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 4px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: var(--r-sm);
+}
+
+.ad-confirm__warn {
+  margin: 12px 0 0;
+  color: #c0392b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+// --- ログイン -------------------------------------------------
+.ad-login {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.ad-login__box {
+  width: 100%;
+  max-width: 400px;
+  padding: 30px 28px;
+  background: var(--card);
+  border: 3px solid var(--ink);
+  border-radius: 0 var(--r-lg) 0 var(--r-lg);
+}
+
+.ad-login__brand {
+  margin: 0;
+  font-family: var(--f-num);
+  font-size: 34px;
+  line-height: 1;
+  letter-spacing: 0.06em;
+}
+
+@media (max-width: 767px) {
+  .ad__row {
+    flex-wrap: wrap;
+  }
+
+  .ad__rowbtns {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .ad-image {
+    flex-direction: column;
+  }
+}
