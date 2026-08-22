@@ -12,9 +12,6 @@
 app/fune-gallery.css
 public/fune-gallery.js
 
-# 旧WordPress一式（デザインの原本。こちらから触らない）
-docker-lamp/
-
 # テンプレートの clone 置き場
 agentic-tdd-starter-sets/
 

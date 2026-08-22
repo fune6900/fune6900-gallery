@@ -1,0 +1,63 @@
+// =============================================================
+//  Fune Gallery – main stylesheet
+//
+//  ゼンレスゾーンゼロ公式サイトの設計言語（明るいグレー地 / 角丸 /
+//  ライム / 黒いUIクロム）の上に、ゲーム世界のモチーフ（ブラウン管 /
+//  VHS / グラフィティ / ネオン / オーディオ機器）を重ねたテーマ。
+//  設計の根拠と実測値は DESIGN.md を参照。
+//
+//  読み込み順に意味がある:
+//    1. Bootstrap の SCSS 変数上書き（Bootstrap 本体より前でないと効かない）
+//    2. Bootstrap の必要な部分だけ
+//    3. デザイントークン（CSS カスタムプロパティ）と mixin
+//    4. テーマのパーツ
+// =============================================================
+
+// ---- 1. Bootstrap variable overrides -------------------------
+$body-bg: #efefef;
+$body-color: #000000;
+$primary: #d8fa00;
+$link-color: #000000;
+$link-hover-color: #000000;
+$grid-gutter-width: 1.5rem;
+
+$font-family-sans-serif:
+  "Zen Kaku Gothic New",
+  system-ui,
+  -apple-system,
+  BlinkMacSystemFont,
+  "Hiragino Sans",
+  Meiryo,
+  sans-serif;
+
+// ---- 2. Bootstrap (curated subset – no components/JS) --------
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/variables-dark";
+@import "bootstrap/scss/maps";
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/utilities";
+@import "bootstrap/scss/root";
+@import "bootstrap/scss/reboot";
+@import "bootstrap/scss/containers";
+@import "bootstrap/scss/grid";
+@import "bootstrap/scss/helpers";
+@import "bootstrap/scss/utilities/api";
+
+// ---- 3. Design tokens & mixins ------------------------------
+@import "tokens";
+
+// ---- 4. Theme partials --------------------------------------
+@import "base";
+@import "motifs";
+@import "header";
+@import "hero";
+@import "stats";
+@import "controls";
+@import "gallery";
+@import "pager";
+@import "single";
+@import "lightbox";
+@import "page";
+@import "notfound";
+@import "footer";

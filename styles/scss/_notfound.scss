@@ -1,0 +1,44 @@
+// =============================================================
+//  404 — SIGNAL LOST
+//  「電波が受信できない」に見立てた黒い画面。
+// =============================================================
+
+.fg-lost {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 58vh;
+  margin: 40px 0;
+  padding-block: 70px;
+  overflow: hidden;
+  text-align: center;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 0 var(--r-lg) 0 var(--r-lg);
+}
+
+.fg-lost__static {
+  position: absolute;
+  inset: 0;
+  opacity: 0.2;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+  animation: fg-static 0.12s steps(3) infinite;
+}
+
+.fg-lost__in {
+  position: relative;
+  z-index: 1;
+}
+
+.fg-lost__t {
+  margin: 0 0 14px;
+  font-family: var(--f-num);
+  font-size: clamp(40px, 8vw, 96px);
+  line-height: 1;
+}
+
+.fg-lost__s {
+  margin: 0 0 30px;
+  color: var(--lime);
+  @include dot-label(12px, 0.2em);
+}

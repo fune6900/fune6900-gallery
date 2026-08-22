@@ -50,7 +50,8 @@ components/         # 表側のパーツ。機能別の下位ディレクトリ�
 lib/                # Supabase/R2接続、認証、CRUD、ギャラリーの取得と幾何計算
 scripts/            # 移行・バックフィル
 public/             # fune-gallery.js（旧テーマJSそのまま。編集禁止）
-docker-lamp/        # 旧WordPress一式。デザインの原本。アプリからは参照しない
+styles/scss/        # 表側スタイルの原本。npm run css で app/fune-gallery.css を生成
+docs/DESIGN.md      # デザイン仕様書。デザインの唯一の正
 ```
 
 `components/ui/` `components/features/` `hooks/` `services/` `types/` `tests/` は

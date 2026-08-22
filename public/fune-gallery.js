@@ -439,14 +439,25 @@
 	 * 8. ヒーローの CSS 3D キューブ
 	 *    カーソルはヒーロー全体で拾い、離れたら自動回転に戻る。
 	 *    lerp で補間しているぶんが「慣性」になる。
+	 *
+	 *    タッチ端末はカーソルが無いので、代わりにスワイプで回す。
+	 *    こちらは指を離すまで回し、離したら惰性で減衰して止まる。
 	 * ------------------------------------------------------- */
 	function initCube() {
 		var stage = document.getElementById('fg-stage');
 		var cube = document.getElementById('fg-cube');
 		if (!stage || !cube) { return; }
 
-		// モバイルは GPU 負荷とバッテリーの都合で動かさない
-		if (REDUCE || COARSE) { return; }
+		if (REDUCE) { return; }
+
+		// タッチ端末はカーソルが無い。スワイプで回せるようにし、
+		// 操作の案内も「SWIPE」に差し替える。
+		if (COARSE) {
+			var hint = stage.querySelector('.fg-stage__hint');
+			if (hint) { hint.textContent = 'SWIPE'; }
+			initCubeSwipe(stage, cube);
+			return;
+		}
 
 		var hero = stage.closest('.fg-hero');
 		if (!hero) { return; }
@@ -476,6 +487,75 @@
 			cube.style.transform = 'rotateX(' + cy.toFixed(2) + 'deg) rotateY(' + cx.toFixed(2) + 'deg)';
 			window.requestAnimationFrame(loop);
 		})();
+	}
+
+	/**
+	 * タッチ端末向け。横スワイプで立方体を回す。
+	 *
+	 * touch-action:pan-y を JS 側で立てているのがポイント。
+	 * これで「横方向はこちらが受け取る／縦方向はページのスクロールに渡す」を
+	 * ブラウザに任せられる。preventDefault で止める作りにすると、
+	 * 立方体の上に指を置いたときにページが動かせなくなる。
+	 *
+	 * 回すのは横方向の移動量だけにしてある。縦はスクロールに渡している以上、
+	 * その移動量で回すとスクロール中に立方体が暴れるため。
+	 */
+	function initCubeSwipe(stage, cube) {
+		// 既定の姿勢はマウス版の初期値に合わせる
+		var rx = -16, ry = 24;
+		var vy = 0;              // 指を離したあとの惰性
+		var lastX = 0;
+		var dragging = false;
+		var raf = null;
+
+		stage.style.touchAction = 'pan-y';
+		stage.style.cursor = 'grab';
+
+		function render() {
+			cube.style.transform = 'rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg)';
+		}
+
+		// 動きが収まったら rAF を畳む。指を触れていないあいだ回し続けない。
+		function spin() {
+			if (!dragging) {
+				ry += vy;
+				vy *= 0.94;
+				render();
+				if (Math.abs(vy) < 0.02) { raf = null; return; }
+			}
+			raf = window.requestAnimationFrame(spin);
+		}
+
+		function kick() {
+			if (raf === null) { raf = window.requestAnimationFrame(spin); }
+		}
+
+		stage.addEventListener('touchstart', function (e) {
+			dragging = true;
+			vy = 0;
+			lastX = e.touches[0].clientX;
+			kick();
+		}, { passive: true });
+
+		stage.addEventListener('touchmove', function (e) {
+			if (!dragging) { return; }
+			var x = e.touches[0].clientX;
+			var dx = x - lastX;
+			lastX = x;
+			ry += dx * 0.6;
+			vy = dx * 0.6;   // 離したあとはこの勢いを引き継ぐ
+			render();
+		}, { passive: true });
+
+		function end() {
+			if (!dragging) { return; }
+			dragging = false;
+			kick();
+		}
+		stage.addEventListener('touchend', end, { passive: true });
+		stage.addEventListener('touchcancel', end, { passive: true });
+
+		render();
 	}
 
 	/* ---------------------------------------------------------

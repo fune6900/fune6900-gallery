@@ -23,7 +23,7 @@
   --bs-gray-700: #495057;
   --bs-gray-800: #343a40;
   --bs-gray-900: #212529;
-  --bs-primary: #D8FA00;
+  --bs-primary: #d8fa00;
   --bs-secondary: #6c757d;
   --bs-success: #198754;
   --bs-info: #0dcaf0;
@@ -74,7 +74,7 @@
   --bs-body-line-height: 1.5;
   --bs-body-color: #000000;
   --bs-body-color-rgb: 0, 0, 0;
-  --bs-body-bg: #EFEFEF;
+  --bs-body-bg: #efefef;
   --bs-body-bg-rgb: 239, 239, 239;
   --bs-emphasis-color: #000;
   --bs-emphasis-color-rgb: 0, 0, 0;
@@ -6816,23 +6816,24 @@ progress {
   }
 }
 :root {
-  --bg: #EFEFEF;
-  --card: #FFFFFF;
+  --bg: #efefef;
+  --card: #ffffff;
   --ink: #000000;
   --ink-2: #222122;
   --ink-3: #787878;
-  --lime: #D8FA00;
-  --lime-2: #C6E800;
-  --neon-pink: #FF2D8E;
-  --neon-cyan: #00E5FF;
+  --lime: #d8fa00;
+  --lime-2: #c6e800;
+  --neon-pink: #ff2d8e;
+  --neon-cyan: #00e5ff;
   --r-pill: 999px;
   --r-lg: 34px;
   --r-md: 20px;
   --r-sm: 9px;
-  --ease: cubic-bezier(.2, .7, .3, 1);
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
   --f-num: "Anton", Impact, sans-serif;
-  --f-jp: "Zen Kaku Gothic New", system-ui, -apple-system,
-               "Hiragino Sans", Meiryo, sans-serif;
+  --f-jp:
+    "Zen Kaku Gothic New", system-ui, -apple-system, "Hiragino Sans", Meiryo,
+    sans-serif;
   --f-stencil: "Saira Stencil One", var(--f-num);
   --f-dot: "Silkscreen", monospace;
   --head-h: 64px;
@@ -6974,13 +6975,13 @@ a:hover {
   --in-x: 0px;
   --in-y: -34px;
   --in-rot: -16deg;
-  --in-sc: .84;
+  --in-sc: 0.84;
 }
 
 .fg-reveal--pop {
   --in-x: 0px;
   --in-y: 0px;
-  --in-sc: .66;
+  --in-sc: 0.66;
 }
 
 .fg-btn {
@@ -7690,7 +7691,7 @@ a:hover {
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: #0A0A0A;
+  background: #0a0a0a;
 }
 
 .fg-intro__static {
@@ -8383,6 +8384,24 @@ a:hover {
     display: none;
   }
 }
+@media (max-width: 767px) {
+  .fg-hero {
+    padding-block: 28px 200px;
+  }
+  .fg-stage {
+    width: 230px;
+    height: 230px;
+  }
+  .fg-cube {
+    --s: 150px;
+    --half: 75px;
+  }
+  .fg-hero__ribbon {
+    top: auto;
+    bottom: 92px;
+    height: 124px;
+  }
+}
 .fg-stats {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -8825,7 +8844,7 @@ a:hover {
 }
 @keyframes fg-rgb-split {
   0% {
-    filter: drop-shadow(-3px 0 #FF2D8E) drop-shadow(3px 0 #00E5FF);
+    filter: drop-shadow(-3px 0 #ff2d8e) drop-shadow(3px 0 #00e5ff);
   }
   100% {
     filter: none;
@@ -8853,15 +8872,15 @@ a:hover {
 @keyframes fg-card-glitch {
   0% {
     transform: translateX(0);
-    filter: drop-shadow(-5px 0 #FF2D8E) drop-shadow(5px 0 #00E5FF);
+    filter: drop-shadow(-5px 0 #ff2d8e) drop-shadow(5px 0 #00e5ff);
   }
   25% {
     transform: translateX(-6px);
-    filter: drop-shadow(6px 0 #FF2D8E) drop-shadow(-6px 0 #00E5FF);
+    filter: drop-shadow(6px 0 #ff2d8e) drop-shadow(-6px 0 #00e5ff);
   }
   50% {
     transform: translateX(5px);
-    filter: drop-shadow(-4px 0 #D8FA00) drop-shadow(4px 0 #00E5FF);
+    filter: drop-shadow(-4px 0 #d8fa00) drop-shadow(4px 0 #00e5ff);
   }
   75% {
     transform: translateX(-2px);
@@ -8892,7 +8911,8 @@ a:hover {
   }
 }
 @media (max-width: 1099px) {
-  .fg-grid, .fg-grid--narrow {
+  .fg-grid,
+  .fg-grid--narrow {
     --cols: 3;
   }
 }
@@ -8915,7 +8935,8 @@ a:hover {
   .fg-tv__cap b {
     font-size: 11.5px;
   }
-  .fg-tv__cap i, .fg-tv__cap .fg-meter {
+  .fg-tv__cap i,
+  .fg-tv__cap .fg-meter {
     display: none;
   }
 }
@@ -9301,7 +9322,9 @@ a:hover {
   font-size: 16px;
   line-height: 2;
 }
-.fg-page__content h2, .fg-page__content h3, .fg-page__content h4 {
+.fg-page__content h2,
+.fg-page__content h3,
+.fg-page__content h4 {
   margin: 2em 0 0.6em;
   font-weight: 900;
   line-height: 1.3;
@@ -9350,7 +9373,8 @@ a:hover {
   opacity: 1;
   background: var(--ink);
 }
-.fg-page__content ul, .fg-page__content ol {
+.fg-page__content ul,
+.fg-page__content ol {
   padding-left: 1.4em;
 }
 .fg-page__content li {

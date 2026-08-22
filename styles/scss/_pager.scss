@@ -1,0 +1,111 @@
+// =============================================================
+//  Pagination — ビデオデッキのトランスポート
+//  paginate_links() の生出力（.page-numbers）にあてる。
+// =============================================================
+
+.fg-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 40px;
+
+  .page-numbers {
+    display: grid;
+    place-items: center;
+    min-width: 40px;
+    height: 40px;
+    padding-inline: 12px;
+    border: 3px solid var(--ink);
+    border-radius: var(--r-pill);
+    color: var(--ink);
+    font-family: var(--f-num);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    transition: 0.15s var(--ease);
+
+    &:hover {
+      background: #fff;
+    }
+
+    &.current {
+      background: var(--lime);
+      border-color: var(--lime);
+    }
+
+    &.dots {
+      border-color: transparent;
+      &:hover {
+        background: none;
+      }
+    }
+  }
+
+  // PREV / NEXT はデッキのボタンにする
+  .prev,
+  .next {
+    flex-direction: column;
+    gap: 2px;
+    min-width: 68px;
+    min-height: 46px;
+    height: auto;
+    padding: 8px 14px 7px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--ink);
+    color: #fff;
+    font-family: var(--f-jp);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4);
+
+    span {
+      font-size: 13px;
+      line-height: 1;
+      letter-spacing: 0.06em;
+    }
+    em {
+      font-style: normal;
+      line-height: 1;
+      opacity: 0.75;
+      @include dot-label(8px, 0.06em);
+    }
+
+    &:hover {
+      background: var(--lime);
+      color: var(--ink);
+    }
+    &:hover em {
+      opacity: 0.6;
+    }
+    &:active {
+      transform: translateY(4px);
+      box-shadow: 0 0 0 rgba(0, 0, 0, 0.4);
+    }
+  }
+}
+
+// 再生中を示す固定の PLAY ボタン
+.fg-pager__play {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 68px;
+  min-height: 46px;
+  padding: 8px 14px 7px;
+  border-radius: 12px;
+  background: var(--lime);
+  color: var(--ink);
+
+  span {
+    font-size: 13px;
+    line-height: 1;
+  }
+  em {
+    font-style: normal;
+    line-height: 1;
+    opacity: 0.6;
+    @include dot-label(8px, 0.06em);
+  }
+}

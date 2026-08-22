@@ -7,9 +7,9 @@ Codex はこの `AGENTS.md` を入口として同じ開発ルールに従いま�
 
 Fune6900 のイラスト作品アーカイブ。表側の公開ギャラリーと、作品を登録する管理画面。
 
-もとは Docker 上の WordPress（`docker-lamp/`）で動いていたものを Next.js + Supabase +
+もとは Docker 上の WordPress で動いていたものを Next.js + Supabase +
 Cloudflare R2 に移行した。**表側の見た目は旧WordPressテーマ `fune-gallery` の1対1移植**で、
-デザインの唯一の正は `docker-lamp/htdocs/wp-content/themes/fune-gallery/DESIGN.md`。
+デザインの唯一の正は `docs/DESIGN.md`。
 
 ## スタック
 
@@ -42,9 +42,7 @@ Cloudflare R2 に移行した。**表側の見た目は旧WordPressテーマ `fu
 
 整形も手直しもしないこと。旧テーマと同一であることが価値です。
 
-- `app/fune-gallery.css` — テーマの `src/scss/main.scss` の生成物。直すときはSCSS側
-- `public/fune-gallery.js` — テーマの `assets/js/main.js` そのまま
-- `docker-lamp/` — 旧WordPress一式。デザインの原本
+- `app/fune-gallery.css` — `styles/scss/main.scss` の生成物。直すときはSCSS側（`npm run css`）
 
 いずれも `.prettierignore` で除外済みです。
 

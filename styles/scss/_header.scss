@@ -1,0 +1,351 @@
+// =============================================================
+//  Header / mobile menu / side nav
+// =============================================================
+
+.fg-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--head-h);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-inline: 24px;
+  background: var(--ink);
+  color: #fff;
+}
+
+.fg-header__brand {
+  margin-right: 18px;
+  font-family: var(--f-num);
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  color: #fff;
+
+  small {
+    display: block;
+    font-family: var(--f-jp);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.28em;
+    opacity: 0.85;
+  }
+
+  &:hover {
+    color: #fff;
+  }
+}
+
+.fg-header__nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fg-header__sp {
+  flex: 1;
+}
+
+.fg-header__icon {
+  display: grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--ink);
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.15s var(--ease);
+
+  &:hover,
+  &[aria-expanded="true"] {
+    background: var(--lime);
+  }
+}
+
+// ヘッダー直下に降りてくる検索フォーム
+.fg-searchbar {
+  position: fixed;
+  top: var(--head-h);
+  left: 0;
+  right: 0;
+  z-index: 49;
+  display: none;
+  padding: 18px 24px;
+  background: var(--ink);
+  border-bottom: 3px solid var(--lime);
+
+  &.is-open {
+    display: block;
+  }
+
+  form {
+    max-width: 720px;
+    margin-inline: auto;
+  }
+}
+
+// --- ハンバーガー --------------------------------------------
+.fg-burger {
+  display: none;
+  position: relative;
+  width: 31px;
+  height: 31px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+
+  span {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    background: var(--ink);
+    transition: 0.2s var(--ease);
+  }
+
+  span:nth-child(1) {
+    top: 11px;
+  }
+  span:nth-child(2) {
+    bottom: 11px;
+  }
+
+  &.is-active {
+    background: var(--lime);
+
+    span:nth-child(1) {
+      top: 15px;
+      transform: rotate(45deg);
+    }
+    span:nth-child(2) {
+      bottom: 14px;
+      transform: rotate(-45deg);
+    }
+  }
+}
+
+// --- 全画面オーバーレイのモバイルメニュー --------------------
+// ヘッダー(50)より下に敷く。こうしないと閉じるボタンごと覆ってしまい、
+// Escape 以外でメニューを閉じられなくなる。
+.fg-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: var(--head-h) 32px 0;
+  overflow: hidden;
+  background: var(--bg);
+
+  &.is-open {
+    display: flex;
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.08;
+    background: repeating-linear-gradient(
+      45deg,
+      var(--ink) 0 14px,
+      transparent 14px 28px
+    );
+  }
+}
+
+.fg-menu__link {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding-block: 12px;
+  font-size: 34px;
+  font-weight: 900;
+  color: var(--ink);
+  animation: fg-menu-in 0.28s var(--ease) backwards;
+
+  &:nth-of-type(1) {
+    animation-delay: 0.05s;
+  }
+  &:nth-of-type(2) {
+    animation-delay: 0.1s;
+  }
+
+  span {
+    font-family: var(--f-num);
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--ink-3);
+  }
+
+  &:hover {
+    color: var(--ink);
+  }
+  &:hover span {
+    color: var(--ink);
+  }
+}
+
+@keyframes fg-menu-in {
+  from {
+    opacity: 0;
+    transform: translate(-18px, 22px);
+  }
+}
+
+.fg-menu__search {
+  position: relative;
+  max-width: 420px;
+  margin-top: 22px;
+  animation: fg-menu-in 0.28s var(--ease) 0.18s backwards;
+}
+
+@media (max-width: 767px) {
+  .fg-header__nav {
+    display: none;
+  }
+  .fg-burger {
+    display: block;
+  }
+}
+
+// =============================================================
+//  右端の縦ピルナビ
+// =============================================================
+.fg-sidenav {
+  position: fixed;
+  right: 14px;
+  top: 50%;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  padding: 14px 7px;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  color: #fff;
+  transform: translateY(-50%);
+  // 黒い帯の上に来ても輪郭が消えないように白いリングを付ける
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.28);
+
+  b {
+    writing-mode: vertical-rl;
+    font-family: var(--f-num);
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--lime);
+  }
+
+  span {
+    writing-mode: vertical-rl;
+    font-family: var(--f-num);
+    font-size: 15px;
+    color: #6e6e6e;
+  }
+
+  i {
+    font-style: normal;
+    font-size: 10px;
+    color: #9a9a9a;
+  }
+}
+
+// --- スクロール量のゲージ ------------------------------------
+.fg-sidenav__prog {
+  width: 3px;
+  height: 46px;
+  margin-top: 2px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.18);
+  overflow: hidden;
+
+  i {
+    display: block;
+    width: 100%;
+    height: var(--p, 0%);
+    border-radius: 3px;
+    background: var(--lime);
+    box-shadow: 0 0 8px var(--lime);
+  }
+}
+
+// --- 起動アニメーション --------------------------------------
+// 右の外から滑り込み、中央の一本線からブラウン管のように開く。
+// 中の表示は少し遅れて順に点く。
+.fg-js .fg-sidenav {
+  opacity: 0;
+  transform: translate(94px, -50%);
+
+  &.is-on {
+    opacity: 1;
+    transform: translate(0, -50%);
+    transition:
+      opacity 0.28s var(--ease),
+      transform 0.5s var(--ease);
+    animation: fg-side-boot 0.52s var(--ease) 0.18s backwards;
+  }
+
+  > * {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+
+  &.is-on > * {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.22s var(--ease),
+      transform 0.22s var(--ease);
+  }
+
+  &.is-on > *:nth-child(1) {
+    transition-delay: 0.4s;
+  }
+  &.is-on > *:nth-child(2) {
+    transition-delay: 0.48s;
+  }
+  &.is-on > *:nth-child(3) {
+    transition-delay: 0.54s;
+  }
+  &.is-on > *:nth-child(4) {
+    transition-delay: 0.6s;
+  }
+  &.is-on > *:nth-child(5) {
+    transition-delay: 0.68s;
+  }
+}
+
+@keyframes fg-side-boot {
+  0% {
+    clip-path: inset(48% 0 48% 0);
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fg-js .fg-sidenav,
+  .fg-js .fg-sidenav > * {
+    opacity: 1;
+    transform: translateY(-50%);
+  }
+  .fg-js .fg-sidenav > * {
+    transform: none;
+  }
+}
+
+@media (max-width: 1099px) {
+  .fg-sidenav {
+    display: none;
+  }
+}

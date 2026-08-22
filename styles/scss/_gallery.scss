@@ -1,0 +1,380 @@
+// =============================================================
+//  ギャラリー — 白い角丸カードの山積み
+//
+//  セル高は JS が実測幅から --cell に入れる。
+//  100vw だとスクロールバーぶんだけ横にはみ出すため。
+// =============================================================
+
+.fg-grid {
+  --cols: 5;
+  --gap: 14px;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  // 行の高さは JS が実測幅から --cell に入れる。
+  // 代替値は JS が動く前の一瞬と JS 無効時のためのおおよその近似。
+  grid-auto-rows: var(
+    --cell,
+    calc((min(1600px, 100vw) - 120px) / var(--cols) / 6)
+  );
+  grid-auto-flow: dense;
+  gap: var(--gap);
+}
+
+@media (min-width: 1700px) {
+  .fg-grid {
+    --cols: 6;
+  }
+}
+@media (min-width: 2200px) {
+  .fg-grid {
+    --cols: 7;
+  }
+}
+
+// 幅 1500px の .fg-wrap の中で使う場合（関連作品など）
+.fg-grid--narrow {
+  --cols: 4;
+}
+
+// 行数・列数はカードごとにインラインで入る（PHP が画像の比から計算する）。
+// 関連作品などジオメトリを渡さない場合の既定値。
+.fg-grid > .fg-tv {
+  grid-row: span 4;
+}
+
+// 2列ぶん使う「見せ札」。角丸を非対称にして、ゆっくり浮かせる。
+.fg-tv--feature {
+  border-radius: 0 var(--r-lg) 0 var(--r-lg);
+  animation: fg-float 7s ease-in-out infinite;
+}
+
+// --- カード ---------------------------------------------------
+// transform は変数を合成して作る。
+//   --px  … スクロールに連動した横流れ（列ごとに量が違うので斜めに見える）
+//   --ey  … ホバーの浮き
+//   --rotv/--sc … ホバーで打ち消す用
+.fg-tv {
+  --ex: 0px;
+  --ey: 0px;
+  --sc: 1;
+  --rotv: var(--rot, 0deg);
+  --px: calc(var(--drift, 0px) * var(--pmul, 0));
+
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: var(--card);
+  border: 3px solid var(--ink);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transform: translate(calc(var(--ex) + var(--px)), var(--ey))
+    rotate(var(--rotv)) translateY(var(--off, 0px)) scale(var(--sc));
+  transition:
+    transform 0.18s var(--ease),
+    box-shadow 0.18s var(--ease),
+    border-color 0.18s var(--ease);
+}
+
+// 登場。方向は JS がグリッド内の列から決めて変数に入れる。
+.fg-js .fg-tv {
+  opacity: 0;
+
+  &.is-in {
+    opacity: 1;
+    animation: fg-card-in 0.62s var(--ease) backwards;
+    animation-delay: var(--in-delay, 0ms);
+  }
+}
+
+@keyframes fg-card-in {
+  from {
+    opacity: 0;
+    transform: translate(calc(var(--in-x, 0px) + var(--px)), var(--in-y, 44px))
+      rotate(var(--in-rot, var(--rot, 0deg))) translateY(var(--off, 0px))
+      scale(var(--in-sc, 1));
+  }
+}
+
+@keyframes fg-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -6px;
+  }
+}
+
+.fg-tv__img {
+  position: absolute;
+  inset: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    // セルより縦長の画像が来たときに削られるのは上下。顔はたいてい
+    // 上寄りにあるので、切り取り位置を少し上に寄せておく。
+    object-position: 50% 30%;
+    // UI（黒とライム）を最前面に立たせるため、作品側は少し抑える
+    filter: saturate(0.9) brightness(0.98);
+    transition:
+      transform 0.3s var(--ease),
+      filter 0.18s var(--ease);
+  }
+}
+
+// チャンネル番号と年
+.fg-tv__ch {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  z-index: 3;
+  padding: 3px 11px;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  color: #fff;
+  font-family: var(--f-num);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.fg-tv__yr {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 3;
+  padding: 2px 10px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  font-family: var(--f-num);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+// ホバーで上から下へ走る 1 本の走査線
+.fg-tv__line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 36px;
+  z-index: 3;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(216, 250, 0, 0.55),
+    transparent
+  );
+}
+
+// タイトル帯（テキスト + レベルメーターの 2 カラム）
+.fg-tv__cap {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 13px;
+  border-radius: var(--r-sm);
+  background: var(--ink);
+  color: #fff;
+  transform: translateY(calc(100% + 10px));
+  transition: transform 0.18s var(--ease);
+
+  > span:first-child {
+    flex: 1;
+    min-width: 0;
+  }
+
+  b {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  i {
+    display: block;
+    margin-top: 2px;
+    font-style: normal;
+    color: var(--lime);
+    font-family: var(--f-num);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+
+  .fg-meter {
+    flex: none;
+    height: 18px;
+  }
+  .fg-meter i {
+    width: 3px;
+    margin: 0;
+  }
+}
+
+// --- ホバー / フォーカス -------------------------------------
+.fg-tv:hover,
+.fg-tv:focus-visible {
+  --rotv: 0deg;
+  --ey: -6px;
+  --sc: 1.03;
+  z-index: 20;
+  border-color: var(--lime);
+  box-shadow:
+    0 14px 0 -4px rgba(0, 0, 0, 0.14),
+    0 0 0 6px var(--lime);
+
+  .fg-tv__img img {
+    transform: scale(1.05);
+    filter: saturate(1.06) brightness(1.03);
+  }
+
+  .fg-tv__cap {
+    transform: translateY(0);
+  }
+  .fg-tv__line {
+    animation: fg-tv-line 0.3s linear 1;
+  }
+  // 色収差（赤と青のズレ）を一瞬だけ挟む
+  .fg-tv__img {
+    animation: fg-rgb-split 0.09s steps(2) 1;
+  }
+}
+
+.fg-tv:active {
+  --rotv: 0deg;
+  --ey: -2px;
+  --sc: 1.01;
+}
+
+@keyframes fg-tv-line {
+  from {
+    opacity: 0.9;
+    top: -36px;
+  }
+  to {
+    opacity: 0;
+    top: 100%;
+  }
+}
+
+@keyframes fg-rgb-split {
+  0% {
+    filter: drop-shadow(-3px 0 #ff2d8e) drop-shadow(3px 0 #00e5ff);
+  }
+  100% {
+    filter: none;
+  }
+}
+
+// --- ランダムなグリッチ --------------------------------------
+.fg-tv.is-glitch {
+  .fg-tv__img {
+    animation: fg-card-glitch 0.24s steps(3) 1;
+  }
+  .fg-tv__img img {
+    filter: saturate(1.5) contrast(1.2) brightness(1.1);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 38%;
+    height: 14%;
+    z-index: 8;
+    background: rgba(255, 255, 255, 0.55);
+    mix-blend-mode: overlay;
+    animation: fg-glitch-band 0.24s steps(2) 1;
+  }
+}
+
+@keyframes fg-card-glitch {
+  0% {
+    transform: translateX(0);
+    filter: drop-shadow(-5px 0 #ff2d8e) drop-shadow(5px 0 #00e5ff);
+  }
+  25% {
+    transform: translateX(-6px);
+    filter: drop-shadow(6px 0 #ff2d8e) drop-shadow(-6px 0 #00e5ff);
+  }
+  50% {
+    transform: translateX(5px);
+    filter: drop-shadow(-4px 0 #d8fa00) drop-shadow(4px 0 #00e5ff);
+  }
+  75% {
+    transform: translateX(-2px);
+    filter: none;
+  }
+  100% {
+    transform: translateX(0);
+    filter: none;
+  }
+}
+
+@keyframes fg-glitch-band {
+  0% {
+    top: 22%;
+    opacity: 0.9;
+  }
+  50% {
+    top: 64%;
+    opacity: 0.5;
+  }
+  100% {
+    top: 80%;
+    opacity: 0;
+  }
+}
+
+// --- レスポンシブ --------------------------------------------
+@media (max-width: 1399px) {
+  .fg-grid {
+    --cols: 4;
+  }
+}
+@media (max-width: 1099px) {
+  .fg-grid,
+  .fg-grid--narrow {
+    --cols: 3;
+  }
+}
+
+@media (max-width: 767px) {
+  .fg-grid,
+  .fg-grid--narrow {
+    --cols: 2;
+    --gap: 10px;
+    // 2列だと大・横長がどちらも全幅になり、dense が空いた1マスを
+    // 後ろのカードで埋めてしまう。番号が前後して見えるので素直に並べる。
+    grid-auto-flow: row;
+  }
+
+  .fg-tv {
+    --rot: 0deg !important;
+  }
+}
+
+// タッチ端末はホバーが無いので、タイトルを常時出す
+@media (hover: none) {
+  .fg-tv__cap {
+    transform: translateY(0);
+    padding: 7px 10px;
+
+    b {
+      font-size: 11.5px;
+    }
+    i,
+    .fg-meter {
+      display: none;
+    }
+  }
+}
