@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+// 組み込みの Image（measure() で使っている）と名前がぶつかるので別名にする
+import NextImage from "next/image";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabase } from "@/lib/supabase-browser";
 import {
@@ -90,45 +92,70 @@ export default function AdminClient({
         <p className="ad__empty">まだ作品がありません。</p>
       ) : (
         <div className="ad__list">
-          {works.map((work) => (
-            <div key={work.id} className="ad__row">
-              <span className="ad__thumb">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={work.image_url} alt="" loading="lazy" />
-              </span>
-
-              <div className="ad__meta">
-                <p className="ad__title">{work.title}</p>
-                <p className="ad__sub">
-                  NO.{String(work.id).padStart(3, "0")}
-                  {" / "}
-                  {work.production_date
-                    ? work.production_date.replace(/-/g, ".")
-                    : "日付なし"}
-                </p>
-              </div>
-
-              <div className="ad__rowbtns">
+          {works.map((work) => {
+            const openEdit = () => {
+              setEditing(work);
+              setShowForm(true);
+            };
+            return (
+              <div key={work.id} className="ad__card">
+                {/* 画像そのものが編集への入口 */}
                 <button
                   type="button"
-                  className="ad__mini"
-                  onClick={() => {
-                    setEditing(work);
-                    setShowForm(true);
-                  }}
+                  className="ad__cardimg"
+                  onClick={openEdit}
+                  aria-label={`「${work.title}」を編集`}
                 >
-                  編集
+                  <span className="ad__no" aria-hidden="true">
+                    NO.{String(work.id).padStart(3, "0")}
+                  </span>
+                  {!work.production_date && (
+                    <span className="ad__nodate">NO DATE</span>
+                  )}
+                  {/*
+                    R2にあるのは原寸（20MB超のものもある）。管理画面でも
+                    そのまま出すと一覧を開くだけで大量に読み込むことになるので、
+                    表側と同じく変換を通す。
+                  */}
+                  <NextImage
+                    src={work.image_url}
+                    alt=""
+                    width={work.image_width ?? 1200}
+                    height={work.image_height ?? 900}
+                    sizes="(max-width: 767px) 45vw, 240px"
+                  />
                 </button>
-                <button
-                  type="button"
-                  className="ad__mini ad__mini--danger"
-                  onClick={() => setDeleting(work)}
-                >
-                  削除
-                </button>
+
+                <div className="ad__cardbody">
+                  <div className="ad__meta">
+                    <p className="ad__title">{work.title}</p>
+                    <p className="ad__sub">
+                      {work.production_date
+                        ? work.production_date.replace(/-/g, ".")
+                        : "制作日なし（表側に出ません）"}
+                    </p>
+                  </div>
+
+                  <div className="ad__rowbtns">
+                    <button
+                      type="button"
+                      className="ad__mini"
+                      onClick={openEdit}
+                    >
+                      編集
+                    </button>
+                    <button
+                      type="button"
+                      className="ad__mini ad__mini--danger"
+                      onClick={() => setDeleting(work)}
+                    >
+                      削除
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
