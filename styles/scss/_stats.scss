@@ -1,0 +1,85 @@
+// =============================================================
+//  Stats strip — 情報量を足すための計器帯
+// =============================================================
+
+.fg-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  padding-block: 26px 6px;
+}
+
+.fg-stat {
+  position: relative;
+  overflow: hidden;
+  padding: 14px 18px 12px;
+  background: #fff;
+  border: 3px solid var(--ink);
+  border-radius: var(--r-md);
+}
+
+.fg-stat--lime {
+  background: var(--lime);
+}
+
+.fg-stat--ink {
+  background: var(--ink);
+  color: #fff;
+
+  .fg-bar {
+    background: rgba(255, 255, 255, 0.16);
+  }
+  .fg-bar i {
+    background: var(--lime);
+  }
+}
+
+.fg-stat--lime .fg-bar i {
+  background: var(--ink);
+}
+
+.fg-stat__k {
+  margin: 0 0 2px;
+  opacity: 0.62;
+  @include stencil(11px);
+}
+
+.fg-stat__v {
+  margin: 0;
+  font-family: var(--f-num);
+  font-size: 38px;
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+
+  small {
+    margin-left: 6px;
+    font-family: var(--f-jp);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+}
+
+.fg-stat__foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.fg-stat__note {
+  opacity: 0.55;
+  @include dot-label(8px, 0.06em);
+}
+
+@media (max-width: 1099px) {
+  .fg-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .fg-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

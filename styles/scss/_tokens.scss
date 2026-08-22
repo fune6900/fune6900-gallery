@@ -1,0 +1,106 @@
+// =============================================================
+//  Design tokens
+//
+//  値は公式サイト（zenless.hoyoverse.com）の computed style を
+//  実測して採用している。詳細は DESIGN.md「2. デザイントークン」。
+// =============================================================
+
+:root {
+  // --- 地と面 ---
+  --bg: #efefef; // body。公式サイトの実測値
+  --card: #ffffff;
+  --ink: #000000; // 文字と UI クロムの主色
+  --ink-2: #222122;
+  --ink-3: #787878;
+
+  // --- アクセント ---
+  --lime: #d8fa00;
+  --lime-2: #c6e800; // ホバー
+  --neon-pink: #ff2d8e;
+  --neon-cyan: #00e5ff;
+
+  // --- 角丸。clip-path は使わない（公式サイトも使用 0 箇所）---
+  --r-pill: 999px;
+  --r-lg: 34px;
+  --r-md: 20px;
+  --r-sm: 9px;
+
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+
+  // --- 書体 ---
+  // 商用フォントの代替: Impact → Anton / ロダン Bd → Zen Kaku Gothic New
+  --f-num: "Anton", Impact, sans-serif;
+  --f-jp:
+    "Zen Kaku Gothic New", system-ui, -apple-system, "Hiragino Sans", Meiryo,
+    sans-serif;
+  --f-stencil: "Saira Stencil One", var(--f-num);
+  --f-dot: "Silkscreen", monospace;
+
+  --head-h: 64px;
+
+  // スクロール速度に応じて JS が 0〜1 を入れる（VU メーター用）
+  --vu: 0;
+}
+
+// =============================================================
+//  Mixins
+// =============================================================
+
+// 印刷物の網点。黒い面に重ねる
+@mixin halftone($alpha: 0.17, $size: 6px) {
+  background-image: radial-gradient(
+    rgba(255, 255, 255, $alpha) 1.1px,
+    transparent 1.2px
+  );
+  background-size: $size $size;
+}
+
+// 黒い面に敷く細い斜めハッチ
+@mixin hatch($alpha: 0.05) {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, $alpha) 0 2px,
+    transparent 2px 8px
+  );
+}
+
+// フィルムの粒子
+@mixin grain($opacity: 0.06) {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  pointer-events: none;
+  opacity: $opacity;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+// UI ラベル（ステンシル）
+@mixin stencil($size: 13px, $ls: 0.14em) {
+  font-family: var(--f-stencil);
+  font-size: $size;
+  font-weight: 400;
+  letter-spacing: $ls;
+}
+
+// ドット文字
+@mixin dot-label($size: 9px, $ls: 0.1em) {
+  font-family: var(--f-dot);
+  font-size: $size;
+  letter-spacing: $ls;
+}
+
+// 「押した感触」— 下辺に硬い影を置き、押下でその分だけ沈める
+@mixin solid($color: var(--ink), $depth: 4px) {
+  box-shadow: 0 $depth 0 $color;
+  transition:
+    transform 0.09s var(--ease),
+    box-shadow 0.09s var(--ease),
+    background-color 0.15s var(--ease),
+    color 0.15s var(--ease);
+
+  &:active {
+    transform: translateY($depth);
+    box-shadow: 0 0 0 $color;
+  }
+}

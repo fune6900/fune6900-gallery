@@ -145,9 +145,9 @@ jobs:
               echo
               for f in $HIT; do echo "- \`$f\`"; done
               echo
-              echo "これらは旧WordPressテーマの原本そのものです。"
-              echo "**SCSS を直して再生成した結果なら問題ありません。**"
-              echo "手で編集した場合は元に戻し、\`src/scss/\` 側を直してください。"
+              echo "\`app/fune-gallery.css\` は \`styles/scss/\` の生成物です。"
+              echo "**SCSS を直して \`npm run css\` した結果なら問題ありません。**"
+              echo "手で編集した場合は元に戻し、SCSS 側を直してください。"
             } >> "$GITHUB_STEP_SUMMARY"
           else
             echo "✅ 編集禁止ファイルに変更なし"

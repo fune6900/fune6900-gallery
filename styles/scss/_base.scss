@@ -1,0 +1,425 @@
+// =============================================================
+//  Base & shared utilities
+// =============================================================
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-jp);
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.8;
+  overflow-x: hidden;
+}
+
+// フィルムの粒子を画面全体に薄くかける
+body::after {
+  @include grain;
+}
+
+a {
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+:focus-visible {
+  outline: 3px solid var(--lime);
+  outline-offset: 2px;
+}
+
+// 和文の改行を文節で切る（対応ブラウザのみ）
+.jp-break {
+  word-break: auto-phrase;
+  line-break: strict;
+}
+
+// スクリーンリーダー専用テキスト
+.screen-reader-text {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 12px;
+  z-index: 400;
+  padding: 12px 20px;
+  background: var(--lime);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: var(--r-pill);
+  transition: top 0.16s var(--ease);
+
+  &:focus {
+    top: 12px;
+  }
+}
+
+// --- レイアウト幅 --------------------------------------------
+.fg-wrap {
+  max-width: 1500px;
+  margin-inline: auto;
+  padding-inline: 32px;
+}
+
+// ギャラリーは画面いっぱいまで使う
+.fg-bleed {
+  width: 100%;
+  padding-inline: 24px;
+}
+
+// 右端の縦ナビが出る幅では、その分だけ右を空ける
+@media (min-width: 1100px) {
+  .fg-bleed {
+    padding-right: 74px;
+  }
+}
+
+@media (max-width: 767px) {
+  .fg-wrap,
+  .fg-bleed {
+    padding-inline: 16px;
+  }
+}
+
+// --- スクロールで現れる要素 ----------------------------------
+//
+// 伏せるのは .fg-js が付いているとき（= JS が動く環境）だけ。
+// 素の状態を opacity:0 にすると、JS 無効時に内容が永久に見えなくなる。
+//
+// CSS の @keyframes は WAAPI と違って var() を解決するので、
+// 「どこから出るか」を変数で差し替えられる。to を書かなければ
+// 終点は要素の実際の transform になり、ステッカーの傾きなども保たれる。
+.fg-js .fg-reveal {
+  opacity: 0;
+
+  &.is-in {
+    opacity: 1;
+    animation: fg-in 0.6s var(--ease) backwards;
+    animation-delay: var(--in-delay, 0ms);
+  }
+}
+
+@keyframes fg-in {
+  from {
+    opacity: 0;
+    transform: translate(var(--in-x, 0px), var(--in-y, 26px))
+      rotate(var(--in-rot, 0deg)) scale(var(--in-sc, 1));
+  }
+}
+
+// 出てくる方向。要素ごとに付け替える
+.fg-reveal--left {
+  --in-x: -70px;
+  --in-y: 16px;
+  --in-rot: -3deg;
+}
+.fg-reveal--right {
+  --in-x: 70px;
+  --in-y: 16px;
+  --in-rot: 3deg;
+}
+.fg-reveal--up {
+  --in-x: 0px;
+  --in-y: 48px;
+}
+.fg-reveal--down {
+  --in-x: 0px;
+  --in-y: -48px;
+}
+.fg-reveal--diag {
+  --in-x: -52px;
+  --in-y: 52px;
+  --in-rot: -4deg;
+}
+.fg-reveal--spin {
+  --in-x: 0px;
+  --in-y: -34px;
+  --in-rot: -16deg;
+  --in-sc: 0.84;
+}
+.fg-reveal--pop {
+  --in-x: 0px;
+  --in-y: 0px;
+  --in-sc: 0.66;
+}
+
+// --- ボタン ---------------------------------------------------
+.fg-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 48px;
+  padding: 0 30px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  color: #fff;
+  font-family: var(--f-jp);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  @include solid;
+
+  &:hover {
+    background: var(--lime);
+    color: var(--ink);
+  }
+}
+
+.fg-btn--lime {
+  background: var(--lime);
+  color: var(--ink);
+
+  &:hover {
+    background: var(--ink);
+    color: #fff;
+  }
+}
+
+// 明るい地でも黒い帯の上でも輪郭が残る副ボタン
+.fg-btn--outline {
+  background: #fff;
+  color: var(--ink);
+  box-shadow:
+    inset 0 0 0 3px var(--ink),
+    0 4px 0 var(--ink);
+
+  &:hover {
+    background: var(--lime);
+    color: var(--ink);
+  }
+
+  &:active {
+    box-shadow:
+      inset 0 0 0 3px var(--ink),
+      0 0 0 var(--ink);
+  }
+}
+
+// --- ピル（ヘッダー / フッターのナビ）-------------------------
+.fg-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 31px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: none;
+  font-family: var(--f-jp);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.15s var(--ease);
+}
+
+.fg-pill--ghost {
+  color: #fff;
+  opacity: 0.72;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.fg-pill--on {
+  background: #fff;
+  color: var(--ink);
+}
+
+.fg-pill--lime {
+  background: var(--lime);
+  color: var(--ink);
+
+  &:hover {
+    background: var(--lime-2);
+  }
+}
+
+// --- セクション ----------------------------------------------
+.fg-sec {
+  padding-block: 52px;
+}
+
+// 和文 / 欧文 / 巨大数字の3段構え
+.fg-shead {
+  position: relative;
+  display: inline-block;
+  overflow: visible;
+  margin-bottom: 26px;
+}
+
+.fg-shead__block {
+  position: relative;
+  background: var(--lime);
+  // 非対称の大きな角丸。これが公式サイト独特のリズム
+  border-radius: 0 64px 0 0;
+  padding: 26px 78px 22px 34px;
+}
+
+.fg-shead__jp {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1.12;
+  letter-spacing: 0.02em;
+}
+
+.fg-shead__en {
+  margin: 3px 0 0;
+  @include stencil(15px);
+}
+
+.fg-shead__num {
+  margin: 4px 0 0;
+  font-family: var(--f-num);
+  font-size: 74px;
+  line-height: 0.82;
+  letter-spacing: 0.01em;
+}
+
+.fg-shead--sm .fg-shead__block {
+  padding: 18px 60px 16px 26px;
+}
+.fg-shead--sm .fg-shead__jp {
+  font-size: 22px;
+}
+
+// 見出しの右に並べる計器
+.fg-gauge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--ink-3);
+  @include dot-label;
+
+  b {
+    font-family: var(--f-num);
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+  }
+
+  .fg-bar {
+    width: 130px;
+  }
+}
+
+// --- 進捗バー -------------------------------------------------
+.fg-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.14);
+  overflow: hidden;
+
+  i {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: 3px;
+    background: var(--ink);
+    transition: width 1.1s var(--ease);
+  }
+}
+
+// --- 空状態 ---------------------------------------------------
+.fg-empty {
+  display: grid;
+  place-items: center;
+  gap: 22px;
+  padding-block: 90px;
+  text-align: center;
+}
+
+.fg-empty__t {
+  margin: 0;
+  font-family: var(--f-num);
+  font-size: clamp(34px, 6vw, 74px);
+  line-height: 0.95;
+}
+
+.fg-empty__s {
+  margin: 0;
+  color: var(--ink-3);
+  @include stencil(13px, 0.18em);
+}
+
+// 砂嵐の 1 台。検索 0 件と 404 で共用する
+.fg-static-tv {
+  position: relative;
+  width: min(320px, 70vw);
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--ink);
+  border: 3px solid var(--ink);
+  border-radius: 0 var(--r-lg) 0 var(--r-lg);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.3;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+    animation: fg-static 0.12s steps(3) infinite;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.18;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.6) 0 1px,
+      transparent 1px 3px
+    );
+  }
+}
+
+@keyframes fg-static {
+  0% {
+    background-position: 0 0;
+  }
+  33% {
+    background-position: 22px -14px;
+  }
+  66% {
+    background-position: -16px 18px;
+  }
+}
+
+// =============================================================
+//  動きを減らす設定への対応（必須）
+//  点滅は光過敏性発作のリスクがあるため、自動アニメは全停止する。
+// =============================================================
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .fg-js .fg-reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

@@ -1,7 +1,6 @@
 {
   "extends": "next/core-web-vitals",
   "ignorePatterns": [
-    "docker-lamp/",
     "agentic-tdd-starter-sets/",
     "migration-data/",
     "public/fune-gallery.js",

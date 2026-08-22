@@ -36,7 +36,8 @@ scripts/
   backfill-image-size.ts     既存作品に画像の実寸を埋める
 supabase-setup.sql         DBテーブル作成SQL
 supabase-add-image-size.sql 画像サイズ列の追加（既存DB向け）
-docker-lamp/               旧WordPress一式（デザインの原本。アプリからは参照しない）
+styles/scss/               表側スタイルの原本（npm run css で app/fune-gallery.css を生成）
+docs/DESIGN.md             デザイン仕様書（デザインの唯一の正）
 ```
 
 ## セットアップ手順（Docker前提）
@@ -139,23 +140,24 @@ docker compose exec app npm run migrate  # 移行実行
 
 ## 表側のデザイン
 
-旧WordPressテーマ `fune-gallery`（ゼンレスゾーンゼロ調）をそのまま移植している。
-設計の根拠と実測値は **`docker-lamp/htdocs/wp-content/themes/fune-gallery/DESIGN.md`** が
-引き続き正。マークアップのクラス名・DOM構造もテンプレートに合わせてあるので、
-DESIGN.md を読めばこちらのコードも読める。
+旧WordPressテーマ `fune-gallery`（ゼンレスゾーンゼロ調）をそのまま移植したもの。
+設計の根拠と実測値は **`docs/DESIGN.md`** が引き続き正。マークアップのクラス名・DOM構造も
+旧テンプレートに合わせてあるので、DESIGN.md を読めばこちらのコードも読める。
 
-- **CSS** — テーマの `src/scss/main.scss` を dart-sass でコンパイルした結果が
-  `app/fune-gallery.css`。**直接編集しない。** 直すときは SCSS を直してから:
+> 移植が終わったので、旧WordPress一式（`docker-lamp/`）は 2026-08-22 に削除した。
+> SCSS と DESIGN.md だけこのリポジトリに引き取ってある。
+
+- **CSS** — `styles/scss/main.scss` を dart-sass でコンパイルした結果が
+  `app/fune-gallery.css`。**生成物なので直接編集しない。** 直すときは SCSS を直して:
 
   ```bash
-  cd docker-lamp/htdocs/wp-content/themes/fune-gallery
-  npm install   # 初回のみ
-  ./node_modules/.bin/sass src/scss/main.scss "../../../../../app/fune-gallery.css" \
-    --load-path=node_modules --style=expanded --no-source-map
+  npm run css          # 1回だけ生成
+  npm run css:watch    # 書きながら生成し続ける
   ```
 
-- **JS** — テーマの `assets/js/main.js` をそのまま `public/fune-gallery.js` に置いてある。
-  差分は起動部分の1箇所だけ（`DOMContentLoaded` を待つ／既に終わっていればすぐ走らせる）。
+- **JS** — `public/fune-gallery.js`。旧テーマの `assets/js/main.js` が出発点だが、
+  起動部分の差し替えとSPのスワイプ対応を入れてあるので、もう写しではない。
+  ここで保守する。整形すると差分が読みにくくなるので prettier からは外してある。
 
 - **リンク** — 表側は `<Link>` ではなく素の `<a>` を使う。WordPress と同じく毎回
   ページ全体を読み直すことで、読み込みイントロとページ送りのCRT演出が同じように出る。

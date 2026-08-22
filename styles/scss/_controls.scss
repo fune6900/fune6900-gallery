@@ -1,0 +1,142 @@
+// =============================================================
+//  Control bar — 年フィルタ / 並び替え / 検索
+// =============================================================
+
+.fg-controls {
+  position: sticky;
+  top: var(--head-h);
+  z-index: 40;
+  background: var(--bg);
+  border-bottom: 3px solid var(--ink);
+}
+
+.fg-controls__in {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-block: 14px;
+}
+
+.fg-controls__label {
+  color: var(--ink-3);
+  font-size: 10.5px;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+}
+
+.fg-controls__sp {
+  flex: 1;
+  min-width: 0;
+}
+
+.fg-controls form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+// --- 年チップ ------------------------------------------------
+.fg-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fg-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 18px;
+  border: 3px solid var(--ink);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--f-jp);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  @include solid;
+
+  &:hover {
+    background: #fff;
+  }
+
+  &.is-on {
+    background: var(--lime);
+    border-color: var(--lime);
+  }
+}
+
+// --- セレクタ / 検索欄 ---------------------------------------
+.fg-select {
+  height: 34px;
+  padding: 0 14px;
+  border: 3px solid var(--ink);
+  border-radius: var(--r-pill);
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--f-jp);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  @include solid;
+}
+
+.fg-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 16px;
+  border: 3px solid var(--ink);
+  border-radius: var(--r-pill);
+  background: #fff;
+  @include solid;
+
+  input {
+    width: 170px;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    font-family: var(--f-jp);
+    font-size: 12.5px;
+    font-weight: 700;
+
+    &::placeholder {
+      color: var(--ink-3);
+    }
+    &:focus {
+      outline: none;
+    }
+  }
+
+  &--wide {
+    width: 100%;
+    input {
+      width: 100%;
+    }
+  }
+}
+
+// 検索語のバッジ
+.fg-term {
+  font-weight: 900;
+
+  &::before {
+    content: '[ "';
+  }
+  &::after {
+    content: '" ]';
+  }
+}
+
+@media (max-width: 767px) {
+  .fg-field input {
+    width: 110px;
+  }
+  .fg-knob {
+    display: none;
+  }
+}

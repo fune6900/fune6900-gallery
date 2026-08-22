@@ -6,8 +6,8 @@
 
 Fune6900 のイラスト作品アーカイブ。表側の公開ギャラリーと、作品を登録する管理画面からなる。
 
-もとは Docker 上の WordPress（`docker-lamp/`）で動いていたものを、Next.js + Supabase + Cloudflare R2 に移行した。**表側の見た目は旧WordPressテーマ `fune-gallery` を1対1で移植したもの**で、デザインの唯一の正は今も
-`docker-lamp/htdocs/wp-content/themes/fune-gallery/DESIGN.md`。
+もとは Docker 上の WordPress で動いていたものを、Next.js + Supabase + Cloudflare R2 に移行した。**表側の見た目は旧WordPressテーマ `fune-gallery` を1対1で移植したもの**で、デザインの唯一の正は `docs/DESIGN.md`。
+（移植は完了したので、旧WordPress一式は 2026-08-22 に削除した。SCSS と DESIGN.md だけこのリポジトリに引き取ってある）
 ゼンレスゾーンゼロ調（明るいグレー地 + 黒いUIクロム + ライム、CRT/VHS/グラフィティのモチーフ）。
 
 作品数は127点。制作日の新しい順に24件ずつ表示する。
@@ -53,7 +53,8 @@ Fune6900 のイラスト作品アーカイブ。表側の公開ギャラリー�
 - `components/` — 表側のパーツ（ヘッダー/ヒーロー/カード/計器帯 …）
 - `lib/` — Supabase/R2接続、認証、CRUD、ギャラリーの取得と幾何計算
 - `scripts/` — 移行・バックフィル
-- `docker-lamp/` — 旧WordPress一式。**デザインの原本。アプリからは参照しない**
+- `styles/scss/` — 表側のスタイルの原本。`npm run css` で `app/fune-gallery.css` を生成する
+- `docs/DESIGN.md` — デザイン仕様書。**デザインの唯一の正**
 
 `components/ui/` `components/features/` `hooks/` `types/` `tests/` は存在しない。
 
@@ -61,13 +62,15 @@ Fune6900 のイラスト作品アーカイブ。表側の公開ギャラリー�
 
 整形も手直しもしないこと。旧テーマと同一であることが価値。
 
-| ファイル                 | 理由                                                                   |
-| ------------------------ | ---------------------------------------------------------------------- |
-| `app/fune-gallery.css`   | テーマの `src/scss/main.scss` をコンパイルした生成物。直すときはSCSS側 |
-| `public/fune-gallery.js` | テーマの `assets/js/main.js` そのまま（起動部分以外は無改変）          |
-| `docker-lamp/`           | 旧WordPress一式。デザインの原本                                        |
+| ファイル               | 理由                                                               |
+| ---------------------- | ------------------------------------------------------------------ |
+| `app/fune-gallery.css` | `styles/scss/main.scss` の生成物。直すときはSCSS側 → `npm run css` |
 
-いずれも `.prettierignore` で除外済み。
+`.prettierignore` で除外済み。
+
+`public/fune-gallery.js` は旧テーマの `assets/js/main.js` が出発点だが、
+起動部分の差し替えとSPのスワイプ対応を入れてあるので、もう写しではない。
+このリポジトリで保守する。整形すると差分が読みにくくなるので prettier からは外してある。
 
 ## 🔄 開発フロー
 
