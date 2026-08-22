@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 // 組み込みの Image（measure() で使っている）と名前がぶつかるので別名にする
 import NextImage from "next/image";
@@ -14,6 +14,26 @@ import {
 
 // フラッシュメッセージを出しておく時間。ゲージの長さもこの値で決まる。
 const TOAST_MS = 4000;
+
+type AdminSort = "new" | "old" | "id";
+
+// 表側の並び順の言い回しに合わせつつ、管理画面でしか要らない「登録順」を足す。
+// 追加したばかりの作品を探すのに、制作日より登録の新しさのほうが役に立つ。
+const SORTS: Array<[AdminSort, string]> = [
+  ["new", "制作日が新しい順"],
+  ["old", "制作日が古い順"],
+  ["id", "登録が新しい順"],
+];
+
+/** 制作日で並べる。空の作品は末尾にまとめる（表側に出ないもの同士で固まる）。 */
+function byDate(a: Illustration, b: Illustration, asc: boolean): number {
+  const da = a.production_date ?? "";
+  const db = b.production_date ?? "";
+  if (da === db) return b.id - a.id;
+  if (da === "") return 1;
+  if (db === "") return -1;
+  return asc ? da.localeCompare(db) : db.localeCompare(da);
+}
 
 export default function AdminClient({
   initialWorks,
@@ -30,6 +50,27 @@ export default function AdminClient({
     null,
   );
   const noticeSeq = useRef(0);
+
+  // 検索と並び替え。127件ほどなので手元で絞る。サーバーに問い合わせない。
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<AdminSort>("new");
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const filtered = q
+      ? works.filter(
+          (w) =>
+            w.title.toLowerCase().includes(q) ||
+            (w.description ?? "").toLowerCase().includes(q) ||
+            String(w.id).includes(q),
+        )
+      : works;
+
+    const sorted = [...filtered];
+    if (sort === "id") sorted.sort((a, b) => b.id - a.id);
+    else sorted.sort((a, b) => byDate(a, b, sort === "old"));
+    return sorted;
+  }, [works, query, sort]);
 
   function showNotice(text: string) {
     noticeSeq.current += 1;
@@ -98,9 +139,42 @@ export default function AdminClient({
         </div>
       </div>
 
-      <div className="fg-gauge" style={{ marginBottom: 18 }}>
-        <span>WORKS</span>
-        <b>{works.length}</b>
+      <div className="ad__filters">
+        <label className="fg-field">
+          <span aria-hidden="true">&#8981;</span>
+          <span className="screen-reader-text">作品を検索</span>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="タイトル / 説明 / NO."
+            autoComplete="off"
+          />
+        </label>
+
+        <label className="screen-reader-text" htmlFor="ad-sort">
+          並び替え
+        </label>
+        <select
+          className="fg-select"
+          id="ad-sort"
+          value={sort}
+          onChange={(e) => setSort(e.target.value as AdminSort)}
+        >
+          {SORTS.map(([key, label]) => (
+            <option key={key} value={key}>
+              {label}
+            </option>
+          ))}
+        </select>
+
+        <span className="ad__filters__sp" />
+
+        <div className="fg-gauge">
+          <span>WORKS</span>
+          <b>{visible.length}</b>
+          {visible.length !== works.length && <span>/ {works.length}</span>}
+        </div>
       </div>
 
       {notice && (
@@ -133,11 +207,15 @@ export default function AdminClient({
         </div>
       )}
 
-      {works.length === 0 ? (
-        <p className="ad__empty">まだ作品がありません。</p>
+      {visible.length === 0 ? (
+        <p className="ad__empty">
+          {works.length === 0
+            ? "まだ作品がありません。"
+            : `「${query}」に当てはまる作品がありません。`}
+        </p>
       ) : (
         <div className="ad__list">
-          {works.map((work) => {
+          {visible.map((work) => {
             const openEdit = () => {
               setEditing(work);
               setShowForm(true);

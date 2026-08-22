@@ -27,6 +27,39 @@
   flex-wrap: wrap;
 }
 
+// --- 絞り込み（検索 / 並び替え）-------------------------------
+.ad__filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.ad__filters__sp {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .ad__filters {
+    gap: 8px;
+
+    // 検索欄は1行を占有させる。並び替えと同居すると窮屈になる
+    .fg-field {
+      width: 100%;
+    }
+
+    .fg-field input {
+      width: 100%;
+    }
+
+    .ad__filters__sp {
+      display: none;
+    }
+  }
+}
+
 // --- 作品の一覧 -----------------------------------------------
 //
 // 管理画面でも作品を見分けられることが第一なので、行ではなくカードで並べる。

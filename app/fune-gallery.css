@@ -9638,6 +9638,33 @@ a:hover {
   flex-wrap: wrap;
 }
 
+.ad__filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.ad__filters__sp {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .ad__filters {
+    gap: 8px;
+  }
+  .ad__filters .fg-field {
+    width: 100%;
+  }
+  .ad__filters .fg-field input {
+    width: 100%;
+  }
+  .ad__filters .ad__filters__sp {
+    display: none;
+  }
+}
 .ad__list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
