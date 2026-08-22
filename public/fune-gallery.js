@@ -437,125 +437,130 @@
 
 	/* ---------------------------------------------------------
 	 * 8. ヒーローの CSS 3D キューブ
-	 *    カーソルはヒーロー全体で拾い、離れたら自動回転に戻る。
-	 *    lerp で補間しているぶんが「慣性」になる。
 	 *
-	 *    タッチ端末はカーソルが無いので、代わりにスワイプで回す。
-	 *    こちらは指を離すまで回し、離したら惰性で減衰して止まる。
+	 *    掴んで縦横に回す。マウスもタッチも Pointer Events で
+	 *    同じ道を通す。離すと勢いが残り、減衰していく。
+	 *
+	 *    タッチでは stage の上での縦スワイプもこちらが受け取るので、
+	 *    立方体の上に指を置いたままページを送ることはできなくなる。
+	 *    縦にも回せることを優先した。周りは普通にスクロールできる。
 	 * ------------------------------------------------------- */
 	function initCube() {
 		var stage = document.getElementById('fg-stage');
 		var cube = document.getElementById('fg-cube');
 		if (!stage || !cube) { return; }
-
 		if (REDUCE) { return; }
 
-		// タッチ端末はカーソルが無い。スワイプで回せるようにし、
-		// 操作の案内も「SWIPE」に差し替える。
-		if (COARSE) {
-			var hint = stage.querySelector('.fg-stage__hint');
-			if (hint) { hint.textContent = 'SWIPE'; }
-			initCubeSwipe(stage, cube);
-			return;
-		}
+		// 何もしていないときの横回転（度/フレーム）。
+		// タッチ端末では 0 にして、止まったら rAF ごと畳む。
+		// 常時回し続けると電池を食うため。
+		var IDLE_SPIN = COARSE ? 0 : 0.16;
+		// 移動量を角度に変える割合
+		var SENS = 0.55;
+		// 離したあとの減り方。1に近いほど長く回る
+		var FRICTION = 0.955;
+		// 上下は回しすぎると天地が分からなくなるので、ほどほどで止める
+		var MAX_X = 68;
 
-		var hero = stage.closest('.fg-hero');
-		if (!hero) { return; }
-
-		var tx = 24, ty = -16, cx = 24, cy = -16;
-		var idle = 0;
-		var active = false;
-
-		window.addEventListener('mousemove', function (e) {
-			var h = hero.getBoundingClientRect();
-			if (e.clientY < h.top || e.clientY > h.bottom) { active = false; return; }
-
-			var r = stage.getBoundingClientRect();
-			active = true;
-			tx = ((e.clientX - (r.left + r.width / 2)) / h.width) * 150;
-			ty = -((e.clientY - (r.top + r.height / 2)) / h.height) * 90;
-		}, { passive: true });
-
-		(function loop() {
-			if (!active) {
-				idle += 0.28;
-				tx = 24 + Math.sin(idle / 60) * 34;
-				ty = -16 + Math.cos(idle / 85) * 12;
-			}
-			cx += (tx - cx) * 0.075;
-			cy += (ty - cy) * 0.075;
-			cube.style.transform = 'rotateX(' + cy.toFixed(2) + 'deg) rotateY(' + cx.toFixed(2) + 'deg)';
-			window.requestAnimationFrame(loop);
-		})();
-	}
-
-	/**
-	 * タッチ端末向け。横スワイプで立方体を回す。
-	 *
-	 * touch-action:pan-y を JS 側で立てているのがポイント。
-	 * これで「横方向はこちらが受け取る／縦方向はページのスクロールに渡す」を
-	 * ブラウザに任せられる。preventDefault で止める作りにすると、
-	 * 立方体の上に指を置いたときにページが動かせなくなる。
-	 *
-	 * 回すのは横方向の移動量だけにしてある。縦はスクロールに渡している以上、
-	 * その移動量で回すとスクロール中に立方体が暴れるため。
-	 */
-	function initCubeSwipe(stage, cube) {
-		// 既定の姿勢はマウス版の初期値に合わせる
-		var rx = -16, ry = 24;
-		var vy = 0;              // 指を離したあとの惰性
-		var lastX = 0;
+		var rx = -16, ry = 24;          // いまの角度
+		var vx = 0, vy = IDLE_SPIN;     // 勢い
 		var dragging = false;
+		var lastX = 0, lastY = 0;
 		var raf = null;
 
-		stage.style.touchAction = 'pan-y';
+		var hint = stage.querySelector('.fg-stage__hint');
+		if (hint) { hint.textContent = COARSE ? 'SWIPE' : 'DRAG TO SPIN'; }
+
+		// 縦横どちらの動きもこちらで受け取る。
+		// タッチでは、この指定が無いとブラウザが縦をスクロールに使ってしまう。
+		stage.style.touchAction = 'none';
 		stage.style.cursor = 'grab';
+		// 掴んだまま動かしたときに、案内の文字が選択されないように
+		stage.style.userSelect = 'none';
 
 		function render() {
-			cube.style.transform = 'rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg)';
+			cube.style.transform =
+				'rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg)';
 		}
 
-		// 動きが収まったら rAF を畳む。指を触れていないあいだ回し続けない。
-		function spin() {
+		function clampX() {
+			if (rx > MAX_X) { rx = MAX_X; }
+			if (rx < -MAX_X) { rx = -MAX_X; }
+		}
+
+		function loop() {
 			if (!dragging) {
 				ry += vy;
-				vy *= 0.94;
-				render();
-				if (Math.abs(vy) < 0.02) { raf = null; return; }
+				rx += vx;
+				clampX();
+
+				// 横は自動回転の速さへ、縦は0へ寄せる。
+				// PCでは IDLE_SPIN が 0 でないので放っておいても止まらない。
+				vy = IDLE_SPIN + (vy - IDLE_SPIN) * FRICTION;
+				vx *= FRICTION;
+				// 上下はゆっくり水平に戻す
+				rx += (0 - rx) * 0.004;
+
+				// タッチ端末で完全に落ち着いたら、回し続けずに畳む
+				if (COARSE && Math.abs(vy) < 0.02 && Math.abs(vx) < 0.02) {
+					render();
+					raf = null;
+					return;
+				}
 			}
-			raf = window.requestAnimationFrame(spin);
+			render();
+			raf = window.requestAnimationFrame(loop);
 		}
 
 		function kick() {
-			if (raf === null) { raf = window.requestAnimationFrame(spin); }
+			if (raf === null) { raf = window.requestAnimationFrame(loop); }
 		}
 
-		stage.addEventListener('touchstart', function (e) {
+		stage.addEventListener('pointerdown', function (e) {
 			dragging = true;
+			vx = 0;
 			vy = 0;
-			lastX = e.touches[0].clientX;
+			lastX = e.clientX;
+			lastY = e.clientY;
+			stage.style.cursor = 'grabbing';
+			// ステージの外まで出ても追い続ける
+			if (stage.setPointerCapture) { stage.setPointerCapture(e.pointerId); }
+			e.preventDefault();
 			kick();
-		}, { passive: true });
+		});
 
-		stage.addEventListener('touchmove', function (e) {
+		stage.addEventListener('pointermove', function (e) {
 			if (!dragging) { return; }
-			var x = e.touches[0].clientX;
-			var dx = x - lastX;
-			lastX = x;
-			ry += dx * 0.6;
-			vy = dx * 0.6;   // 離したあとはこの勢いを引き継ぐ
-			render();
-		}, { passive: true });
+			var dx = e.clientX - lastX;
+			var dy = e.clientY - lastY;
+			lastX = e.clientX;
+			lastY = e.clientY;
 
-		function end() {
+			ry += dx * SENS;
+			rx -= dy * SENS;
+			clampX();
+
+			// 最後の一瞬だけで勢いを決めると、止め際の小さな動きで死ぬ。
+			// 直前の値を混ぜて均す。
+			vy = vy * 0.6 + dx * SENS * 0.4;
+			vx = vx * 0.6 - dy * SENS * 0.4;
+			render();
+		});
+
+		function release(e) {
 			if (!dragging) { return; }
 			dragging = false;
+			stage.style.cursor = 'grab';
+			if (e && stage.hasPointerCapture && stage.hasPointerCapture(e.pointerId)) {
+				stage.releasePointerCapture(e.pointerId);
+			}
 			kick();
 		}
-		stage.addEventListener('touchend', end, { passive: true });
-		stage.addEventListener('touchcancel', end, { passive: true });
+		stage.addEventListener('pointerup', release);
+		stage.addEventListener('pointercancel', release);
 
 		render();
+		if (!COARSE) { kick(); }   // PCは最初から自動回転させておく
 	}
 
 	/* ---------------------------------------------------------
