@@ -1,5 +1,5 @@
-// ログイン画面は表側のテーマCSSではなく Tailwind を使う。
-import "../globals.css";
+// ログイン画面も表側と同じテーマCSSを使う。
+import "../fune-gallery.css";
 
 export default function LoginLayout({
   children,

@@ -43,7 +43,7 @@ app/
   (site)/           # 表側。旧WordPressテーマと同じ見た目のギャラリー
     page.tsx        #   トップ（front-page.php + search.php）
     works/[id]/     #   作品詳細（single-illustration.php）
-  admin/ login/     # 管理画面（ログイン必須。ここだけ Tailwind）
+  admin/ login/     # 管理画面（ログイン必須。表側と同じテーマCSS）
   api/              # Route Handlers（作成・更新・削除・画像アップロード）
   fune-gallery.css  # 旧テーマSCSSの生成物。編集禁止
 components/         # 表側のパーツ。機能別の下位ディレクトリは切っていない

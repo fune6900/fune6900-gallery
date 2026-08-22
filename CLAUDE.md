@@ -15,14 +15,14 @@ Fune6900 のイラスト作品アーカイブ。表側の公開ギャラリー�
 ## 🛠 技術スタック
 
 - **Core**: Next.js 15 (App Router), React 19, TypeScript
-- **Styling**: 表側は旧テーマのコンパイル済みCSS / 管理画面のみ Tailwind
+- **Styling**: `styles/scss/` から生成した1枚のCSS（表側・管理画面で共用）
 - **Database / Auth**: Supabase（Postgres + Auth）
 - **Storage**: Cloudflare R2（S3互換。画像）
 - **Hosting**: Vercel（ローカル開発は Docker）
 - **Testing**: ⚠️ **未整備**（下記参照）
 
-使っていないもの: Prisma / TanStack Query / Zod。テンプレートの初期値には入っているが、
-このプロジェクトには導入されていない。**あるつもりで書かないこと。**
+使っていないもの: Prisma / TanStack Query / Tailwind CSS。
+Zod は入力バリデーションに使っている（`lib/types.ts`）。
 
 ### ⚠️ テストについて
 
@@ -48,7 +48,7 @@ Fune6900 のイラスト作品アーカイブ。表側の公開ギャラリー�
 ## 📁 ディレクトリ構造
 
 - `app/(site)/` — 表側。旧WordPressテーマと同じ見た目のギャラリー
-- `app/admin/` `app/login/` — 管理画面（ログイン必須。Tailwind）
+- `app/admin/` `app/login/` — 管理画面（ログイン必須。表側と同じテーマCSS）
 - `app/api/` — 作成・更新・削除・画像アップロード
 - `components/` — 表側のパーツ（ヘッダー/ヒーロー/カード/計器帯 …）
 - `lib/` — Supabase/R2接続、認証、CRUD、ギャラリーの取得と幾何計算
@@ -101,7 +101,7 @@ Plan Mode → ISSUE作成 → ブランチ作成
 仕事と割り切り、感情を殺してタスクを処理する6人。
 
 1. **メイド長 (Benz)**: Head Maid / Tech Lead. 全体監督・Refactor判断。
-2. **図案のメイド (Designer)**: UI/UX・Tailwind実装・視覚検証。
+2. **図案のメイド (Designer)**: UI/UX・スタイル実装（styles/scss/）・視覚検証。
 3. **礎のメイド (Architect)**: DB・型・Zodスキーマ定義。
 4. **検閲のメイド (QA)**: TDD Enforcer. Redフェーズ担当・テスト設計。
 5. **構築のメイド (Coder)**: Greenフェーズ担当・実装。

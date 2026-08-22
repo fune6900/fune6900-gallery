@@ -99,7 +99,7 @@
 呼び出すタイミング:
 
 - UIコンポーネントの新規作成・修正
-- Tailwind CSS スタイリング
+- スタイリング（`styles/scss/` の SCSS）
 - `/visual-regression` による視覚的整合性検証
 - レスポンシブ対応の確認
 
@@ -111,7 +111,7 @@
 出力物:
 
 - `components/` 配下の UI コンポーネント
-- Tailwind クラスの修正
+- `styles/scss/` の修正と `npm run css` による再生成
 
 ---
 
