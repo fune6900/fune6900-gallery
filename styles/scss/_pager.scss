@@ -109,3 +109,63 @@
     @include dot-label(8px, 0.06em);
   }
 }
+
+// =============================================================
+//  SP — 1行に収める
+//
+//  既定の寸法（番号40px・REW/FF68px・余白8px）だと、6ページぶんの番号に
+//  REW / FF / PLAY が加わって 508px 必要になり、幅343pxの画面では2〜3行に
+//  折り返していた。全体を詰めたうえで、折り返しではなく横スクロールに逃がす。
+// =============================================================
+@media (max-width: 767px) {
+  .fg-pager {
+    flex-wrap: nowrap;
+    gap: 6px;
+    // 詰めても入りきらない幅（320px級）では、折り返さず横に送る
+    overflow-x: auto;
+    // 中央寄せのまま溢れると先頭が切れてしまうので safe を付ける
+    justify-content: safe center;
+    // スクロールバーで高さが変わらないように
+    scrollbar-width: none;
+    padding-bottom: 2px;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .page-numbers {
+      flex: none;
+      min-width: 30px;
+      height: 34px;
+      padding-inline: 4px;
+      font-size: 12px;
+    }
+
+    // 省略記号は意味だけ残して幅を削る
+    .page-numbers.dots {
+      min-width: 14px;
+      padding-inline: 0;
+    }
+
+    .prev,
+    .next {
+      flex: none;
+      min-width: 46px;
+      min-height: 38px;
+      padding: 6px 8px 5px;
+
+      span {
+        font-size: 11px;
+      }
+      em {
+        font-size: 7px;
+      }
+    }
+  }
+
+  // 「再生中」を示す飾り。現在ページは番号がライムに反転していて分かるので、
+  // 狭い画面では場所を譲る。
+  .fg-pager__play {
+    display: none;
+  }
+}
