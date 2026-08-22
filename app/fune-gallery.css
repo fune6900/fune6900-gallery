@@ -8973,6 +8973,7 @@ a:hover {
   }
   .fg-tv {
     --rot: 0deg !important;
+    --px: 0px;
   }
 }
 @media (hover: none) {
@@ -9094,6 +9095,48 @@ a:hover {
   letter-spacing: 0.06em;
 }
 
+@media (max-width: 767px) {
+  .fg-pager {
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
+    justify-content: safe center;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .fg-pager::-webkit-scrollbar {
+    display: none;
+  }
+  .fg-pager .page-numbers {
+    flex: none;
+    min-width: 30px;
+    height: 34px;
+    padding-inline: 4px;
+    font-size: 12px;
+  }
+  .fg-pager .page-numbers.dots {
+    min-width: 14px;
+    padding-inline: 0;
+  }
+  .fg-pager .prev,
+  .fg-pager .next {
+    flex: none;
+    min-width: 46px;
+    min-height: 38px;
+    padding: 6px 8px 5px;
+  }
+  .fg-pager .prev span,
+  .fg-pager .next span {
+    font-size: 11px;
+  }
+  .fg-pager .prev em,
+  .fg-pager .next em {
+    font-size: 7px;
+  }
+  .fg-pager__play {
+    display: none;
+  }
+}
 .fg-detail {
   display: grid;
   grid-template-columns: 7fr 5fr;
