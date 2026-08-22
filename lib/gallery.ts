@@ -152,6 +152,11 @@ const allDated = cache(async function allDated(): Promise<Illustration[]> {
   return (data ?? []) as Illustration[];
 });
 
+/** 制作日が入っている全作品。sitemap など、一覧と同じ母集団が要る場面で使う。 */
+export async function getAllDatedWorks(): Promise<Illustration[]> {
+  return allDated();
+}
+
 /** fune_gallery_count() — 公開作品数。制作日の有無は問わない。 */
 export const getCount = cache(async function getCount(): Promise<number> {
   const { count, error } = await supabasePublic

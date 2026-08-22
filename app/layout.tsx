@@ -1,9 +1,31 @@
 import type { Metadata } from "next";
-import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
+import { SITE_DESCRIPTION, SITE_NAME, siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: SITE_NAME,
+  // 相対URLを絶対URLに直す基準。OGPとsitemapに要る。
+  metadataBase: siteUrl(),
+  title: {
+    default: SITE_NAME,
+    // 作品ページなど、下の階層が自分の題名を入れたときの型
+    template: `%s | ${SITE_NAME}`,
+  },
   description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    locale: "ja_JP",
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
+  // 管理画面とAPIは検索結果に出す意味がない（robots.ts でも弾いている）
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({
