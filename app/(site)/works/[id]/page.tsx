@@ -14,7 +14,7 @@ import {
   SIZES_PN_THUMB,
   WorkImage,
 } from "@/components/WorkImage";
-import { SITE_NAME } from "@/lib/site";
+import { SITE_DESCRIPTION } from "@/lib/site";
 import {
   formatDate,
   getAdjacent,
@@ -33,8 +33,43 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const work = await getWork(Number(id));
+  if (!work) return {};
+
+  // OGPは原寸ではなく変換済みを渡す。原寸は20MB超のものがあり、
+  // カード生成側が読み込めないことがある。
+  const { props: og } = getImageProps({
+    src: work.image_url,
+    alt: "",
+    width: 1200,
+    height:
+      work.image_width && work.image_height
+        ? Math.round((1200 * work.image_height) / work.image_width)
+        : 900,
+    quality: 80,
+  });
+
+  const description = work.description?.slice(0, 120) ?? SITE_DESCRIPTION;
+
   // 旧テーマの document_title_parts フィルタと同じで、タブのタイトルは作品名。
-  return work ? { title: `${work.title} | ${SITE_NAME}` } : {};
+  // ルートレイアウトの template でサイト名が後ろに付く。
+  return {
+    title: work.title,
+    description,
+    openGraph: {
+      type: "article",
+      title: work.title,
+      description,
+      url: `/works/${work.id}`,
+      images: [{ url: og.src, alt: work.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: work.title,
+      description,
+      images: [og.src],
+    },
+    alternates: { canonical: `/works/${work.id}` },
+  };
 }
 
 export default async function WorkDetailPage({

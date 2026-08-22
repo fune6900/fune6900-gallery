@@ -226,6 +226,31 @@ R2 に入っているのは**原寸**（4000〜7000px、1枚20MB超のものも�
   （seed を URL に固定する仕組みも一緒に落とした）
 - **SPではコントロールバーを固定表示しない。** 代わりに同じ操作をヘッダーの検索パネルに置いている
 
+## Next.js まわりの取り決め
+
+- **セキュリティヘッダーは `next.config.ts` の `headers()`** で全パスに付けている。
+  CSP は `security.md` の雛形そのままでは動かないので、実際に必要なものだけを許可した
+  （書体は Google Fonts、画像はR2のホスト、通信先は Supabase）。
+  `script-src` に `'unsafe-inline'` が要るのは Next のハイドレーション用インラインスクリプトのため。
+  nonce 方式にするなら middleware での発行が必要。
+- **`robots.txt` / `sitemap.xml`** は `app/robots.ts` / `app/sitemap.ts` が生成する。
+  **どちらもビルド時に静的生成される**ので、絶対URLの元になる `NEXT_PUBLIC_SITE_URL` が
+  無いと localhost が焼き込まれる。Vercel なら未設定でも本番URLが入るが、独自ドメインを使うなら設定すること。
+  取り違えると気付きにくいので、本番ビルドで localhost に落ちた場合は警告を出している。
+- **OGP / Twitter Card** はルートレイアウトで既定を、作品ページで作品ごとの値を出す。
+  `og:image` は原寸ではなく `getImageProps()` で 1200px に縮めたものを渡している
+  （原寸は20MB超のものがあり、カード生成側が読めないことがある）。
+- **エラー境界** は `app/global-error.tsx`（レイアウトごと落ちた場合）、
+  `app/(site)/error.tsx`（表側）、`app/admin/error.tsx`（管理画面）。
+
+### あえて Next.js の一般的な作法に従っていないところ
+
+- **表側のリンクは `<Link>` ではなく素の `<a>`。** クライアント遷移にすると、
+  読み込みイントロとページ送りのCRT演出が動かなくなる。移植の要件が優先。
+- **書体は `next/font` ではなく `<link>` 直書き。** テーマCSSが `"Anton"` などの
+  実名でフォントを指しているため。`next/font` はハッシュ名を作るので、
+  移すなら CSS 変数経由に直す必要がある（未着手）。
+
 ## 認証の仕組み
 
 - 管理画面(`/admin`)は `middleware.ts` でログイン必須
