@@ -107,8 +107,12 @@ export default async function SiteFooter() {
         >
           &#10005;
         </button>
+        {/*
+          src は付けない。空文字を渡すとブラウザがページ自体を取りに行く。
+          開いたときに FgRuntime（public/fune-gallery.js）が実物を差し込む。
+        */}
         {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
-        <img id="fg-lightbox-img" src="" alt="" />
+        <img id="fg-lightbox-img" alt="" />
         <p className="fg-lb__hint">ESC / 背景クリックで閉じる</p>
       </div>
 
