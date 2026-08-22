@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 // 組み込みの Image（measure() で使っている）と名前がぶつかるので別名にする
 import NextImage from "next/image";
 import { useRouter } from "next/navigation";
@@ -10,6 +11,9 @@ import {
   fieldErrors,
   type Illustration,
 } from "@/lib/types";
+
+// フラッシュメッセージを出しておく時間。ゲージの長さもこの値で決まる。
+const TOAST_MS = 4000;
 
 export default function AdminClient({
   initialWorks,
@@ -21,7 +25,24 @@ export default function AdminClient({
   const [editing, setEditing] = useState<Illustration | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [deleting, setDeleting] = useState<Illustration | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  // 同じ文言が続いたときも出し直せるよう、id を持たせて key に使う
+  const [notice, setNotice] = useState<{ id: number; text: string } | null>(
+    null,
+  );
+  const noticeSeq = useRef(0);
+
+  function showNotice(text: string) {
+    noticeSeq.current += 1;
+    setNotice({ id: noticeSeq.current, text });
+  }
+
+  // 消えるまでの時間はこのタイマーが持つ。ゲージの見た目は CSS 側だが、
+  // 秒数は --toast-dur として同じ値を渡しているのでずれない。
+  useEffect(() => {
+    if (!notice) return;
+    const t = setTimeout(() => setNotice(null), TOAST_MS);
+    return () => clearTimeout(t);
+  }, [notice]);
 
   async function handleLogout() {
     const supabase = createBrowserSupabase();
@@ -37,9 +58,9 @@ export default function AdminClient({
     const res = await fetch(`/api/works/${target.id}`, { method: "DELETE" });
     if (res.ok) {
       setWorks((w) => w.filter((x) => x.id !== target.id));
-      setNotice(`「${target.title}」を削除しました`);
+      showNotice(`「${target.title}」を削除しました`);
     } else {
-      setNotice("削除に失敗しました");
+      showNotice("削除に失敗しました");
     }
   }
 
@@ -83,9 +104,33 @@ export default function AdminClient({
       </div>
 
       {notice && (
-        <p className="fg-sticker fg-sticker--lime" style={{ marginBottom: 16 }}>
-          {notice}
-        </p>
+        <div
+          // id を key にすることで、続けて出したときにも滑り込みと
+          // ゲージが最初からやり直される
+          key={notice.id}
+          className="ad-toast"
+          role="status"
+          aria-live="polite"
+          style={{ ["--toast-dur"]: `${TOAST_MS}ms` } as CSSProperties}
+        >
+          <div className="ad-toast__body">
+            <span className="ad-toast__mark" aria-hidden="true">
+              &#10003;
+            </span>
+            <p className="ad-toast__text">{notice.text}</p>
+            <button
+              type="button"
+              className="ad-toast__close"
+              onClick={() => setNotice(null)}
+              aria-label="閉じる"
+            >
+              &#10005;
+            </button>
+          </div>
+          <div className="ad-toast__gauge" aria-hidden="true">
+            <i />
+          </div>
+        </div>
       )}
 
       {works.length === 0 ? (
@@ -171,7 +216,7 @@ export default function AdminClient({
                 : [saved, ...w];
             });
             setShowForm(false);
-            setNotice(`「${saved.title}」を保存しました`);
+            showNotice(`「${saved.title}」を保存しました`);
           }}
         />
       )}

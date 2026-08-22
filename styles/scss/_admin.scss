@@ -204,6 +204,126 @@
 }
 
 // =============================================================
+//  フラッシュメッセージ（トースト）
+//
+//  画面の右斜め上から滑り込ませる。表示が残る時間はゲージで見せる。
+//  ゲージの長さと実際に消えるまでの時間がずれないよう、
+//  秒数は --toast-dur ひとつに寄せて JS 側から渡している。
+// =============================================================
+.ad-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 300;
+  width: min(360px, calc(100vw - 32px));
+  overflow: hidden;
+  background: var(--ink);
+  color: #fff;
+  // 表側の見出しと同じ非対称の角丸
+  border-radius: 0 var(--r-md) 0 var(--r-md);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.28);
+  animation: ad-toast-in 0.42s var(--ease) backwards;
+}
+
+// 右斜め上から。少し傾けて戻すと、貼り紙が飛んできたように見える
+@keyframes ad-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(64px, -44px) rotate(4deg);
+  }
+}
+
+.ad-toast__body {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 12px 12px 14px;
+}
+
+.ad-toast__mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--lime);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.ad-toast__text {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.ad-toast__close {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s var(--ease);
+
+  &:hover {
+    background: var(--lime);
+    color: var(--ink);
+  }
+}
+
+// 残り時間。左端を起点に縮む
+.ad-toast__gauge {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.16);
+
+  i {
+    display: block;
+    height: 100%;
+    background: var(--lime);
+    transform-origin: left center;
+    animation: ad-toast-gauge var(--toast-dur, 4000ms) linear forwards;
+  }
+}
+
+@keyframes ad-toast-gauge {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (max-width: 767px) {
+  .ad-toast {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+}
+
+// 動きを減らす設定では滑り込ませない。
+// ゲージも止まるが、消えるまでの時間は JS のタイマーが持っているので変わらない。
+@media (prefers-reduced-motion: reduce) {
+  .ad-toast {
+    animation: none;
+  }
+}
+
+// =============================================================
 //  モーダル（フォーム / 削除確認）
 // =============================================================
 .ad-modal {
