@@ -9,7 +9,6 @@ import { galleryUrl, getYears, type GalleryParams } from "@/lib/gallery";
 const SORTS: Array<[GalleryParams["sort"], string]> = [
   ["new", "新しい順"],
   ["old", "古い順"],
-  ["rand", "SHUFFLE"],
 ];
 
 export default async function Controls({ params }: { params: GalleryParams }) {

@@ -86,6 +86,20 @@
     max-width: 720px;
     margin-inline: auto;
   }
+
+  // 年と並び替え。SPでコントロールバーの固定表示をやめたぶん、ここから触れる。
+  // PCはコントロールバーが出たままなので出す必要がない。
+  &__opts {
+    display: none;
+  }
+
+  &__label {
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    opacity: 0.6;
+  }
 }
 
 // --- ハンバーガー --------------------------------------------
@@ -347,5 +361,54 @@
 @media (max-width: 1099px) {
   .fg-sidenav {
     display: none;
+  }
+}
+
+// =============================================================
+//  検索パネルの中の年・並び替え（SPのみ）
+//
+//  .fg-chip / .fg-select は明るい地の上を想定した配色なので、
+//  黒いパネルの上ではそのままだと沈む。ここで抜き色を入れ替える。
+// =============================================================
+@media (max-width: 767px) {
+  .fg-searchbar__opts {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    max-width: 720px;
+    margin: 14px auto 0;
+
+    form {
+      margin: 0;
+    }
+
+    .fg-chips {
+      gap: 6px;
+    }
+
+    .fg-chip {
+      height: 30px;
+      padding: 0 14px;
+      border-color: #fff;
+      color: #fff;
+      box-shadow: 0 3px 0 rgba(255, 255, 255, 0.35);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      // 選択中はライム。ここだけ地の色に戻す
+      &.is-on {
+        background: var(--lime);
+        border-color: var(--lime);
+        color: var(--ink);
+      }
+    }
+
+    .fg-select {
+      height: 30px;
+      box-shadow: 0 3px 0 rgba(255, 255, 255, 0.35);
+    }
   }
 }

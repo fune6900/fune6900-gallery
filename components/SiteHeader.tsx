@@ -9,19 +9,31 @@
  */
 import SvgSprite from "./SvgSprite";
 import { SITE_NAME } from "@/lib/site";
-import { pad } from "@/lib/gallery";
+import { galleryUrl, getYears, pad, type GalleryParams } from "@/lib/gallery";
 
-export default function SiteHeader({
+const SORTS: Array<[GalleryParams["sort"], string]> = [
+  ["new", "新しい順"],
+  ["old", "古い順"],
+];
+
+// 作品ページや404から検索パネルを開いたときの既定値
+const NO_FILTER: GalleryParams = { s: "", year: 0, sort: "new", paged: 1 };
+
+export default async function SiteHeader({
   paged = 1,
   pages = 1,
   isGallery = true,
-  s = "",
+  params = NO_FILTER,
 }: {
   paged?: number;
   pages?: number;
   isGallery?: boolean;
-  s?: string;
+  /** 検索パネルに出す絞り込みの現在値。一覧以外では既定値でよい */
+  params?: GalleryParams;
 }) {
+  const s = params.s;
+  const years = await getYears();
+
   return (
     <>
       <a className="skip-link" href="#fg-main">
@@ -93,6 +105,12 @@ export default function SiteHeader({
       {/* ヘッダーの検索アイコンから降りてくるフォーム */}
       <div className="fg-searchbar" id="fg-searchbar">
         <form role="search" method="get" action="/">
+          {params.year > 0 && (
+            <input type="hidden" name="y" value={params.year} />
+          )}
+          {params.sort !== "new" && (
+            <input type="hidden" name="sort" value={params.sort} />
+          )}
           <label className="fg-field fg-field--wide">
             <span aria-hidden="true">&#8981;</span>
             <span className="screen-reader-text">作品を検索</span>
@@ -105,6 +123,64 @@ export default function SiteHeader({
             />
           </label>
         </form>
+
+        {/*
+          年と並び替え。SPではページ側のコントロールバーが固定表示ではなくなるので、
+          スクロールした先からでも触れるようにここに置いてある。
+          PCはコントロールバーが出たままなので CSS で隠している。
+        */}
+        {years.length > 0 && (
+          <div className="fg-searchbar__opts">
+            <span className="fg-searchbar__label">YEAR</span>
+            <div className="fg-chips">
+              <a
+                className={`fg-chip ${params.year ? "" : "is-on"}`}
+                href={galleryUrl(params, { y: null })}
+              >
+                ALL
+              </a>
+              {years.map((y) => (
+                <a
+                  key={y}
+                  className={`fg-chip ${params.year === y ? "is-on" : ""}`}
+                  href={galleryUrl(params, { y })}
+                >
+                  {y}
+                </a>
+              ))}
+            </div>
+
+            <form method="get" action="/">
+              {params.s !== "" && (
+                <input type="hidden" name="s" value={params.s} />
+              )}
+              {params.year > 0 && (
+                <input type="hidden" name="y" value={params.year} />
+              )}
+              <label className="screen-reader-text" htmlFor="fg-sort-head">
+                並び替え
+              </label>
+              <select
+                className="fg-select"
+                name="sort"
+                id="fg-sort-head"
+                defaultValue={params.sort}
+                data-fg-autosubmit
+              >
+                {SORTS.map(([key, label]) => (
+                  <option key={key} value={key}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <noscript>
+                <button className="fg-chip" type="submit">
+                  OK
+                </button>
+              </noscript>
+            </form>
+          </div>
+        )}
       </div>
 
       {/* モバイル用の全画面メニュー。ヘッダーより下の層に敷いてある */}

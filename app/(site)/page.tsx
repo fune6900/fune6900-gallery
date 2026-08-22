@@ -5,7 +5,6 @@
  * ヒーロー・電光掲示板・計器帯が出ない。その分岐をここで再現している。
  */
 import type { CSSProperties } from "react";
-import { redirect } from "next/navigation";
 import { SITE_NAME } from "@/lib/site";
 import Controls from "@/components/Controls";
 import GalleryGrid from "@/components/GalleryGrid";
@@ -36,13 +35,6 @@ export default async function GalleryPage({
   const sp = await searchParams;
   const params = readParams(sp);
 
-  // SHUFFLE は seed を URL に固定してからでないと、ページを跨いだときに
-  // 同じ作品が重複して出る。seed が無ければ振ってリダイレクトする。
-  if (params.sort === "rand" && !params.seed) {
-    const seed = Math.floor(Math.random() * 99999) + 1;
-    redirect(galleryUrl({ ...params, seed }, {}));
-  }
-
   const page = await getGalleryPage(params);
   const cube = await getLatest(6);
   const isSearch = params.s !== "";
@@ -50,7 +42,7 @@ export default async function GalleryPage({
 
   return (
     <>
-      <SiteHeader paged={page.paged} pages={page.pages} s={params.s} />
+      <SiteHeader paged={page.paged} pages={page.pages} params={params} />
 
       <main id="fg-main">
         {!isSearch && onFirstPage && (
