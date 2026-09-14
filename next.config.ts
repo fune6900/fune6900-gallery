@@ -14,31 +14,6 @@ function hostOf(url: string | undefined): string | null {
 const r2Host = hostOf(process.env.R2_PUBLIC_BASE_URL);
 const supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 
-/*
- * R2_PUBLIC_BASE_URL が無いまま本番ビルドを通さない。
- *
- * 下の images.remotePatterns と CSP の img-src は、この値が取れないと
- * `**.r2.dev` のワイルドカードに落ちる。開発中は都合がいいが、本番で
- * それをやると画像最適化APIが「誰の r2.dev バケットでも取ってくる代行窓口」
- * になる。OpenNext の画像ハンドラは remotePatterns しか見ていないので、
- * ここが緩いと他に止める場所が無い。
- *
- * Vercel の頃は env がプロジェクト設定で中央管理されていたので、取りこぼす
- * 余地が小さかった。Cloudflare へ移して任意の環境から `npm run deploy` を
- * 叩くようになった以上、渡し忘れは起こる前提で塞いでおく。
- *
- * 黙って安全でない構成が出来上がるより、ビルドが落ちる方がいい。
- */
-if (process.env.NODE_ENV === "production" && !r2Host) {
-  throw new Error(
-    process.env.R2_PUBLIC_BASE_URL
-      ? `R2_PUBLIC_BASE_URL からホスト名を取り出せません: ${process.env.R2_PUBLIC_BASE_URL}`
-      : "R2_PUBLIC_BASE_URL が設定されていません。" +
-          "未設定のままビルドすると、画像最適化APIが任意の r2.dev バケットの" +
-          "取得代行になります。ビルドを実行する環境に設定してください",
-  );
-}
-
 /**
  * Content-Security-Policy。
  *
@@ -98,7 +73,11 @@ const nextConfig: NextConfig = {
   images: {
     // 実際に使っているバケットのホストだけを許可する。
     // ワイルドカードのままだと、画像最適化APIが他人の r2.dev バケットの
-    // 取得代行に使われうる。env が無い環境（CI等）ではワイルドカードに戻す。
+    // 取得代行に使われうる。
+    //
+    // 値が無い時にワイルドカードへ落とすのは `next dev` と `next lint` の
+    // ためで、本番ビルドはそこへ到達しない。scripts/check-build-env.mjs が
+    // prebuild で止める（config 側で止めると lint まで巻き添えで落ちる）。
     remotePatterns: r2Host
       ? [{ protocol: "https", hostname: r2Host }]
       : [

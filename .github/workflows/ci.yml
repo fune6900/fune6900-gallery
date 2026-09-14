@@ -191,12 +191,12 @@ jobs:
 
           # 本番と同じ分岐を通すためのダミー。秘密ではないので直書きする。
           #
-          # next.config.ts は R2_PUBLIC_BASE_URL が無いと画像の
-          # remotePatterns と CSP をワイルドカードに落とす（本番では
-          # 落とさずに投げる）。値を渡さないと、CI がいつまでも
-          # ワイルドカード側だけを検証し続けることになる。
+          # R2_PUBLIC_BASE_URL が無いと scripts/check-build-env.mjs が
+          # prebuild でビルドを止める。値を渡さないと CI が常に赤くなるうえ、
+          # 渡さないまま止めないようにすると今度は画像の remotePatterns と
+          # CSP がワイルドカードに落ちた構成だけを検証し続けることになる。
           #
-          # NEXT_PUBLIC_SITE_URL も同じ理由。無いと robots.txt と
+          # NEXT_PUBLIC_SITE_URL は止める対象ではないが、無いと robots.txt と
           # sitemap.xml に localhost が焼き込まれた状態で検証してしまう。
           R2_PUBLIC_BASE_URL: https://ci-placeholder.r2.dev
           NEXT_PUBLIC_SITE_URL: https://ci-placeholder.example
