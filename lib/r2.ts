@@ -3,6 +3,7 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
+import { FetchHttpHandler } from "@smithy/fetch-http-handler";
 
 /*
  * 環境変数はすべて「呼ばれた時」に読む。モジュールの読み込み時ではない。
@@ -38,6 +39,22 @@ function r2(): S3Client {
       accessKeyId: env("R2_ACCESS_KEY_ID"),
       secretAccessKey: env("R2_SECRET_ACCESS_KEY"),
     },
+
+    // ★通信方法を fetch に固定する。既定に任せてはいけない。
+    //
+    // AWS SDK は「Node 向け」と「ブラウザ向け」の2つの実体を持っていて、
+    // どちらが選ばれるかはバンドラの解決条件で決まる。Node 向けが選ばれると
+    // node:http で送信しようとするが、Workers(workerd) は node:http の
+    // 発信を実装していないため、送信が必ず失敗する。
+    //
+    // 実際 OpenNext のビルドでは @aws-sdk/client-s3 がバンドルされずに
+    // .open-next/.../node_modules へ外部化され、そこに置かれるのは
+    // NodeHttpHandler を参照する CJS ビルドだった。
+    // 画像アップロードが Internal server error になっていたのはこれが原因。
+    //
+    // 明示しておけば解決条件に左右されない。fetch は Node 18 以降にもあるので、
+    // Docker で自前ホストする場合もそのまま動く。
+    requestHandler: new FetchHttpHandler(),
   });
   return client;
 }
