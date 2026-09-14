@@ -129,12 +129,12 @@ Next.js を Workers で動かすのは `@opennextjs/cloudflare`（OpenNext ア�
 
    ```bash
    wrangler secret put SUPABASE_SERVICE_ROLE_KEY
-   wrangler secret put R2_ENDPOINT
-   wrangler secret put R2_ACCESS_KEY_ID
-   wrangler secret put R2_SECRET_ACCESS_KEY
-   wrangler secret put R2_BUCKET
    wrangler secret put R2_PUBLIC_BASE_URL
    ```
+
+   R2 のアクセスキーは要らない。作品画像は `wrangler.jsonc` の
+   `WORKS_BUCKET` バインディング経由で触るため、署名も鍵も使わない。
+   S3互換APIを使うのは `scripts/` のローカル実行だけ。
 
 #### 6-2. ローカルで確かめる
 
@@ -169,6 +169,10 @@ docker run -p 3000:3000 --env-file .env.local fune-gallery
 本番用 `Dockerfile`（standalone）でビルドされる。
 この場合は Cloudflare は不要だが、公開サーバー（VPS等）が別途必要。
 `next/image` の変換は Next 本体が行うので Cloudflare Images も要らない。
+
+⚠ **この経路では画像アップロードが使えない。** R2 への書き込みは
+Cloudflare のバインディング経由にしてあり、Workers の外では参照できないため。
+表側の閲覧と、既に登録済みの作品の表示は問題なく動く。
 
 ### 7. AWS削除
 

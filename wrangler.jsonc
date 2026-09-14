@@ -48,6 +48,13 @@
   //   R2_PUBLIC_BASE_URL 経由でキャッシュの中身が公開されてしまう。
   "r2_buckets": [
     {
+      // 作品画像。S3互換APIではなくバインディング経由で触る。
+      // AWS SDK は workerd では動かない（Node版の設定ロードが
+      // fs.readFile を呼ぶが unenv に実装が無い）。
+      "binding": "WORKS_BUCKET",
+      "bucket_name": "fune-gallery",
+    },
+    {
       "binding": "NEXT_INC_CACHE_R2_BUCKET",
       "bucket_name": "fune-gallery-isr-cache",
     },

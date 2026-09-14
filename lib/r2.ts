@@ -1,65 +1,60 @@
-import {
-  S3Client,
-  PutObjectCommand,
-  DeleteObjectCommand,
-} from "@aws-sdk/client-s3";
-import { FetchHttpHandler } from "@smithy/fetch-http-handler";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 /*
- * 環境変数はすべて「呼ばれた時」に読む。モジュールの読み込み時ではない。
+ * R2 へは Cloudflare のバインディング経由で触る。S3互換API は使わない。
  *
- * Vercel では process.env がプロセス起動時から揃っているのでトップレベルで
- * 組み立てられたが、Cloudflare Workers では環境変数とシークレットが
- * リクエストごとに供給される。モジュールスコープで読むと、評価の
- * タイミング次第で undefined を掴み、`R2_ENDPOINT!` の `!` が
- * それを黙って通してしまう。落ちるのは実際にアップロードした時なので厄介。
+ * もとは @aws-sdk/client-s3 を使っていたが、Workers(workerd) では動かない。
+ * 理由はひとつではなく、Node 向けの実装を踏むたびに別の形で落ちる。
+ *   - 送信が node:http になる（workerd は発信を実装していない）
+ *   - 設定の読み込みが ~/.aws/config を fs.readFile で読もうとする
+ *     → [unenv] fs.readFile is not implemented yet!
+ * 後者は明示設定で回避しようとしても、SDK 側が設定項目を増やすたびに
+ * 再発しうる。潰し続ける類のものなので、土俵から降りる。
  *
- * 値が無ければその場で投げる。Route Handler 側が 500 に変換する。
+ * バインディングなら同じアカウント内の直通で、署名も鍵も要らない。
+ * 850KB ぶんのSDKもWorkerから消える。
+ *
+ * 代償: Docker で自前ホストする経路では画像アップロードが使えなくなる
+ * （Cloudflare のコンテキストが無いため）。表側の閲覧は影響を受けない。
+ * 移行スクリプト（scripts/）はローカルのNodeで動くので今まで通りSDKを使う。
  */
 
-function env(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new Error(`環境変数 ${name} が設定されていません`);
-  return value;
+/** wrangler.jsonc の r2_buckets で生やしているバインディングのうち、ここで使う分。 */
+interface WorksBucket {
+  put(
+    key: string,
+    value: ArrayBuffer | ArrayBufferView,
+    options?: { httpMetadata?: { contentType?: string } },
+  ): Promise<unknown>;
+  delete(key: string): Promise<void>;
 }
 
-// Cloudflare R2 は S3 互換なので AWS SDK で扱える。
-// endpoint に R2 のエンドポイントを指定するのがポイント。
+function bucket(): WorksBucket {
+  // cloudflare-env.d.ts は型チェックから外している（理由は tsconfig.json）。
+  // そのため env の中身は素では分からない。ここで使う形だけを上の
+  // WorksBucket として書き、その形に絞り込む。
+  const env: unknown = getCloudflareContext().env;
+  const found =
+    env && typeof env === "object"
+      ? (env as Record<string, unknown>).WORKS_BUCKET
+      : undefined;
+
+  if (!found || typeof found !== "object" || !("put" in found)) {
+    throw new Error(
+      "R2バインディング WORKS_BUCKET がありません。" +
+        "wrangler.jsonc の r2_buckets を確認してください" +
+        "（Docker で自前ホストしている場合、画像アップロードは使えません）",
+    );
+  }
+  return found as WorksBucket;
+}
+
+// 例: https://xxxx.r2.dev または独自ドメイン。
+// 公開URLの組み立てにしか使わないので、これだけは環境変数のまま。
 //
-// クライアントは一度作ったら使い回す。同じ隔離環境（isolate）で
-// 2回目以降のリクエストは組み立て直さない。
-let client: S3Client | null = null;
-
-function r2(): S3Client {
-  if (client) return client;
-  client = new S3Client({
-    region: "auto",
-    endpoint: env("R2_ENDPOINT"), // 例: https://<accountid>.r2.cloudflarestorage.com
-    credentials: {
-      accessKeyId: env("R2_ACCESS_KEY_ID"),
-      secretAccessKey: env("R2_SECRET_ACCESS_KEY"),
-    },
-
-    // ★通信方法を fetch に固定する。既定に任せてはいけない。
-    //
-    // AWS SDK は「Node 向け」と「ブラウザ向け」の2つの実体を持っていて、
-    // どちらが選ばれるかはバンドラの解決条件で決まる。Node 向けが選ばれると
-    // node:http で送信しようとするが、Workers(workerd) は node:http の
-    // 発信を実装していないため、送信が必ず失敗する。
-    //
-    // 実際 OpenNext のビルドでは @aws-sdk/client-s3 がバンドルされずに
-    // .open-next/.../node_modules へ外部化され、そこに置かれるのは
-    // NodeHttpHandler を参照する CJS ビルドだった。
-    // 画像アップロードが Internal server error になっていたのはこれが原因。
-    //
-    // 明示しておけば解決条件に左右されない。fetch は Node 18 以降にもあるので、
-    // Docker で自前ホストする場合もそのまま動く。
-    requestHandler: new FetchHttpHandler(),
-  });
-  return client;
-}
-
-// 例: https://xxxx.r2.dev または独自ドメイン
+// 読むのは「呼ばれた時」。モジュール読み込み時ではない。
+// Workers は環境変数をリクエストごとに供給するため、トップレベルで
+// 読むと undefined を掴みうる。
 function publicBase(): string {
   return process.env.R2_PUBLIC_BASE_URL ?? "";
 }
@@ -73,17 +68,15 @@ export async function uploadToR2(
   body: Buffer | Uint8Array,
   contentType: string,
 ): Promise<string> {
-  await r2().send(
-    new PutObjectCommand({
-      Bucket: env("R2_BUCKET"),
-      Key: key,
-      Body: body,
-      ContentType: contentType,
-    }),
-  );
+  await bucket().put(key, body, { httpMetadata: { contentType } });
+
   // 公開バケットのURLを組み立てて返す。
   // ここは URL を作れないと話にならないので、無ければ投げる。
-  return `${env("R2_PUBLIC_BASE_URL")}/${key}`;
+  const base = publicBase();
+  if (!base) {
+    throw new Error("環境変数 R2_PUBLIC_BASE_URL が設定されていません");
+  }
+  return `${base.replace(/\/+$/, "")}/${key}`;
 }
 
 /**
@@ -132,9 +125,7 @@ export function keyFromPublicUrl(url: string): string | null {
  */
 export async function deleteFromR2(key: string): Promise<boolean> {
   try {
-    await r2().send(
-      new DeleteObjectCommand({ Bucket: env("R2_BUCKET"), Key: key }),
-    );
+    await bucket().delete(key);
     return true;
   } catch (e) {
     console.error("[R2] 削除に失敗しました:", key, e);
