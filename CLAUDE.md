@@ -18,7 +18,8 @@ Fune6900 のイラスト作品アーカイブ。表側の公開ギャラリー�
 - **Styling**: `styles/scss/` から生成した1枚のCSS（表側・管理画面で共用）
 - **Database / Auth**: Supabase（Postgres + Auth）
 - **Storage**: Cloudflare R2（S3互換。画像）
-- **Hosting**: Vercel（ローカル開発は Docker）
+- **Hosting**: Cloudflare Workers（`@opennextjs/cloudflare`。ローカル開発は Docker）
+- **Image**: Cloudflare Images（`next/image` の変換を肩代わりさせる）
 - **Testing**: ⚠️ **未整備**（下記参照）
 
 使っていないもの: Prisma / TanStack Query / Tailwind CSS。
@@ -42,6 +43,9 @@ Zod は入力バリデーションに使っている（`lib/types.ts`）。
 - `npm run format` — prettier（除外は `.prettierignore`）
 - `npm run migrate` — WordPressダンプ → Supabase + R2 の移行
 - `npm run backfill:size` — 既存作品に画像の実寸を埋める
+- `npm run preview` — Workers のローカル実行（ビルド込み。:8787）
+- `npm run deploy` — Cloudflare Workers へデプロイ
+- `npm run cf-typegen` — バインディングの型を `cloudflare-env.d.ts` に生成
 
 存在しないコマンド: `npm test` / `npm run e2e`
 

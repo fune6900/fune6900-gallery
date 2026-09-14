@@ -17,5 +17,14 @@
     "paths": { "@/*": ["./*"] }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+
+  // cloudflare-env.d.ts は `npm run cf-typegen` が吐く workerd の型定義。
+  // バインディング（R2・Images・Durable Object）の型を得るためのものだが、
+  // グローバルに workerd 側の Request / Response 等を被せてくるので、
+  // ブラウザ向けのコードまで巻き添えになる。
+  // 実際 fetch の戻りの json() が unknown に変わり、app/admin/AdminClient.tsx が
+  // 型エラーになった。今は getCloudflareContext() を呼んでいる箇所が無く
+  // 参照する必要もないため、通常の型チェックからは外す。
+  // バインディングを直接触るコードを書く時は、そこだけ別 tsconfig を切ること。
+  "exclude": ["node_modules", "cloudflare-env.d.ts"]
 }

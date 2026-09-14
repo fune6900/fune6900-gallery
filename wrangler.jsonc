@@ -1,0 +1,76 @@
+/**
+ * Cloudflare Workers の設定。
+ *
+ * ホスティングは Vercel から移した。Next.js を Workers で動かす経路は
+ * @opennextjs/cloudflare（OpenNext アダプタ）。
+ * もともと検討していた @cloudflare/next-on-pages は 2025-09 に archive され、
+ * 対応も Next 13/14 止まりだったので使えない。
+ *
+ * ビルド成果物は .open-next/ に出る（worker.js 本体と assets/）。
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fune-gallery",
+  "main": ".open-next/worker.js",
+
+  // nodejs_compat が Node ランタイムを有効にする。これがあるおかげで
+  // Buffer（app/api/upload/route.ts）も AWS SDK（lib/r2.ts）もそのまま動く。
+  // 2024-09-23 以降の compatibility_date が前提。
+  //
+  // global_fetch_strictly_public は、Worker から自分のゾーンに fetch したとき
+  // 内部ループではなく公開インターネット経由にする。R2 の S3 API や
+  // Supabase への発信を素直に扱うため。
+  "compatibility_date": "2024-12-30",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+
+  // 静的アセット（.next/static、public/ 配下）
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+  },
+
+  // ISR の再検証で自分自身を呼び返すのに要る
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "fune-gallery",
+    },
+  ],
+
+  // next/image の最適化を Cloudflare Images に肩代わりさせる。
+  // これが無いと原寸（4000〜7000px・1枚20MB超）がそのまま配信される。
+  "images": {
+    "binding": "IMAGES",
+  },
+
+  // ISR のキャッシュ置き場。
+  // ★作品画像のバケットとは必ず別にすること。同居させると
+  //   R2_PUBLIC_BASE_URL 経由でキャッシュの中身が公開されてしまう。
+  "r2_buckets": [
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "fune-gallery-isr-cache",
+    },
+  ],
+
+  // 時間ベースの revalidate（works/[id] と sitemap.ts の revalidate=60）を
+  // さばくキュー。Durable Object で動く。
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "NEXT_CACHE_DO_QUEUE",
+        "class_name": "DOQueueHandler",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["DOQueueHandler"],
+    },
+  ],
+
+  "observability": {
+    "enabled": true,
+  },
+}

@@ -4,19 +4,48 @@ import {
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 
+/*
+ * 環境変数はすべて「呼ばれた時」に読む。モジュールの読み込み時ではない。
+ *
+ * Vercel では process.env がプロセス起動時から揃っているのでトップレベルで
+ * 組み立てられたが、Cloudflare Workers では環境変数とシークレットが
+ * リクエストごとに供給される。モジュールスコープで読むと、評価の
+ * タイミング次第で undefined を掴み、`R2_ENDPOINT!` の `!` が
+ * それを黙って通してしまう。落ちるのは実際にアップロードした時なので厄介。
+ *
+ * 値が無ければその場で投げる。Route Handler 側が 500 に変換する。
+ */
+
+function env(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`環境変数 ${name} が設定されていません`);
+  return value;
+}
+
 // Cloudflare R2 は S3 互換なので AWS SDK で扱える。
 // endpoint に R2 のエンドポイントを指定するのがポイント。
-export const r2 = new S3Client({
-  region: "auto",
-  endpoint: process.env.R2_ENDPOINT!, // 例: https://<accountid>.r2.cloudflarestorage.com
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
-  },
-});
+//
+// クライアントは一度作ったら使い回す。同じ隔離環境（isolate）で
+// 2回目以降のリクエストは組み立て直さない。
+let client: S3Client | null = null;
 
-const BUCKET = process.env.R2_BUCKET!;
-const PUBLIC_BASE = process.env.R2_PUBLIC_BASE_URL!; // 例: https://xxxx.r2.dev または独自ドメイン
+function r2(): S3Client {
+  if (client) return client;
+  client = new S3Client({
+    region: "auto",
+    endpoint: env("R2_ENDPOINT"), // 例: https://<accountid>.r2.cloudflarestorage.com
+    credentials: {
+      accessKeyId: env("R2_ACCESS_KEY_ID"),
+      secretAccessKey: env("R2_SECRET_ACCESS_KEY"),
+    },
+  });
+  return client;
+}
+
+// 例: https://xxxx.r2.dev または独自ドメイン
+function publicBase(): string {
+  return process.env.R2_PUBLIC_BASE_URL ?? "";
+}
 
 // 作品画像はすべてこの下に置く。消す対象もここに限る。
 const PREFIX = "works/";
@@ -27,16 +56,17 @@ export async function uploadToR2(
   body: Buffer | Uint8Array,
   contentType: string,
 ): Promise<string> {
-  await r2.send(
+  await r2().send(
     new PutObjectCommand({
-      Bucket: BUCKET,
+      Bucket: env("R2_BUCKET"),
       Key: key,
       Body: body,
       ContentType: contentType,
     }),
   );
-  // 公開バケットのURLを組み立てて返す
-  return `${PUBLIC_BASE}/${key}`;
+  // 公開バケットのURLを組み立てて返す。
+  // ここは URL を作れないと話にならないので、無ければ投げる。
+  return `${env("R2_PUBLIC_BASE_URL")}/${key}`;
 }
 
 /**
@@ -51,9 +81,12 @@ export async function uploadToR2(
  * @returns 消してよいキー。判断できなければ null
  */
 export function keyFromPublicUrl(url: string): string | null {
-  if (!url || !PUBLIC_BASE) return null;
+  // ベースURLが取れない時は「判断できない」として null を返す。
+  // ここで投げないのは、消す側の入口だから。分からないなら消さないのが正しい。
+  const configured = publicBase();
+  if (!url || !configured) return null;
 
-  const base = PUBLIC_BASE.replace(/\/+$/, "");
+  const base = configured.replace(/\/+$/, "");
   if (!url.startsWith(base + "/")) return null;
 
   // クエリやフラグメントは落とす
@@ -82,7 +115,9 @@ export function keyFromPublicUrl(url: string): string | null {
  */
 export async function deleteFromR2(key: string): Promise<boolean> {
   try {
-    await r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }));
+    await r2().send(
+      new DeleteObjectCommand({ Bucket: env("R2_BUCKET"), Key: key }),
+    );
     return true;
   } catch (e) {
     console.error("[R2] 削除に失敗しました:", key, e);
