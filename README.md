@@ -1,7 +1,7 @@
 # Fune Gallery (Next.js + Docker版)
 
 WordPressから脱却した、Next.js + Supabase + Cloudflare R2 のギャラリーサイト。
-**開発はDocker、公開はVercel**（またはDockerで自前ホスト）。
+**開発はDocker、公開はCloudflare Workers**（またはDockerで自前ホスト）。
 
 ## 構成
 
@@ -10,7 +10,8 @@ WordPressから脱却した、Next.js + Supabase + Cloudflare R2 のギャラリ
 - **Supabase** — データベース（作品情報）+ 認証（管理画面ログイン）
 - **Cloudflare R2** — 画像ストレージ（転送量無料）
 - **Docker** — ローカル開発環境
-- **Vercel** — 公開ホスティング（または自前Dockerホスト）
+- **Cloudflare Workers** — 公開ホスティング（`@opennextjs/cloudflare` 経由。または自前Dockerホスト）
+- **Cloudflare Images** — `next/image` の変換を肩代わりさせる
 
 ## ディレクトリ構成
 
@@ -104,17 +105,74 @@ R2 の画像のヘッダだけ読んで `image_width` / `image_height` を入れ
 縦長の作品も横長と同じ高さの枠に収まり、上下が削られる。
 （入っていなくても 4:3 として表示されるので、サイトは壊れない）
 
-### 6. Vercelにデプロイ（公開）
+### 6. Cloudflare Workers にデプロイ（公開）
 
-1. GitHubリポジトリにpush
-2. Vercel → New Project → リポジトリ選択
-3. 環境変数（.env.localの中身）をVercelに登録
-4. Deploy
+もとは Vercel に置いていたが Cloudflare へ移した。
+Next.js を Workers で動かすのは `@opennextjs/cloudflare`（OpenNext アダプタ）。
 
-※ Vercelはビルド済みを配信するため、Dockerfileは使われない。
-ローカル=Docker、本番=Vercel という分担。
+> Cloudflare Pages + `@cloudflare/next-on-pages` という経路もあったが、
+> 2025-09 に archive され、対応も Next 13/14 止まりなので使えない。
+> Pages で Next.js を動かせるのは静的エクスポートの場合だけになった。
 
-### （代替）Vercelを使わず自前Dockerで公開する場合
+#### 6-1. Cloudflare 側の準備（初回だけ）
+
+1. **R2 バケットをもう1つ作る**（ISRのキャッシュ置き場）
+   名前は `wrangler.jsonc` の `r2_buckets.bucket_name` と合わせる。
+   **作品画像のバケットとは必ず分けること。** 同居させると
+   `R2_PUBLIC_BASE_URL` 経由でキャッシュの中身が外から読めてしまう。
+
+2. **Cloudflare Images を有効にする**
+   `next/image` の変換をここが肩代わりする。従量課金。
+   無効のままだと画像が変換されず、原寸（1枚20MB超）がそのまま出る。
+
+3. **シークレットを登録する**
+
+   ```bash
+   wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+   wrangler secret put R2_PUBLIC_BASE_URL
+   ```
+
+   R2 のアクセスキーは要らない。作品画像は `wrangler.jsonc` の
+   `WORKS_BUCKET` バインディング経由で触るため、署名も鍵も使わない。
+   S3互換APIを使うのは `scripts/` のローカル実行だけ。
+
+#### 6-2. ローカルで確かめる
+
+```bash
+npm run preview   # ビルドして Workers のローカル実行 → http://localhost:8787
+```
+
+`.dev.vars` に上記のシークレットと `NEXTJS_ENV=development` を置いておく
+（`.env.example` を参照。gitignore 済み）。
+
+> ⚠ **ローカルで作品を登録すると、本番DBに壊れた行が残る。**
+>
+> `wrangler dev` は R2 バインディングを模擬バケットに繋ぐので、画像は
+> `.wrangler/state` に入る。一方で作品行が書かれる Supabase はローカルでも
+> 実物で、`image_url` には実バケットの公開URLが入る。結果、画像だけ存在しない
+> 行が本番に残り、一覧で画像が表示されない（`/_next/image` が 404 を返す）。
+>
+> ローカルで登録を試したら、その作品は管理画面から必ず削除すること。
+>
+> 画像表示まで含めて確かめたいなら、`wrangler login` したうえで
+> `wrangler.jsonc` の `WORKS_BUCKET` に `"remote": true` を足す。
+> ただし書き込み先が本番バケットになる点に注意。
+
+#### 6-3. デプロイ
+
+```bash
+npm run deploy
+```
+
+**`NEXT_PUBLIC_*` はビルド時にバンドルへ焼き込まれる**ので、
+`npm run deploy` を走らせる環境に置くこと。Workers のシークレットに入れても届かない。
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SITE_URL` ← **Cloudflare では必須**（下記）
+- `R2_PUBLIC_BASE_URL` ← ビルド時とランタイムの両方で要る
+
+### （代替）Cloudflareを使わず自前Dockerで公開する場合
 
 ```bash
 docker build -t fune-gallery .
@@ -122,7 +180,12 @@ docker run -p 3000:3000 --env-file .env.local fune-gallery
 ```
 
 本番用 `Dockerfile`（standalone）でビルドされる。
-この場合はVercelは不要だが、公開サーバー（VPS等）が別途必要。
+この場合は Cloudflare は不要だが、公開サーバー（VPS等）が別途必要。
+`next/image` の変換は Next 本体が行うので Cloudflare Images も要らない。
+
+⚠ **この経路では画像アップロードが使えない。** R2 への書き込みは
+Cloudflare のバインディング経由にしてあり、Workers の外では参照できないため。
+表側の閲覧と、既に登録済みの作品の表示は問題なく動く。
 
 ### 7. AWS削除
 
@@ -235,7 +298,10 @@ R2 に入っているのは**原寸**（4000〜7000px、1枚20MB超のものも�
   nonce 方式にするなら middleware での発行が必要。
 - **`robots.txt` / `sitemap.xml`** は `app/robots.ts` / `app/sitemap.ts` が生成する。
   **どちらもビルド時に静的生成される**ので、絶対URLの元になる `NEXT_PUBLIC_SITE_URL` が
-  無いと localhost が焼き込まれる。Vercel なら未設定でも本番URLが入るが、独自ドメインを使うなら設定すること。
+  無いと localhost が焼き込まれる。
+  **Cloudflare では必ず設定すること。** Vercel は `VERCEL_URL` を自動で入れてくれたが、
+  Cloudflare にはそれが無い。未設定だと `robots.txt` / `sitemap.xml` / OGP が
+  そろって localhost を指す。
   取り違えると気付きにくいので、本番ビルドで localhost に落ちた場合は警告を出している。
 - **OGP / Twitter Card** はルートレイアウトで既定を、作品ページで作品ごとの値を出す。
   `og:image` は原寸ではなく `getImageProps()` で 1200px に縮めたものを渡している

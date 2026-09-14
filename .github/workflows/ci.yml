@@ -188,6 +188,18 @@ jobs:
           # コード側は NEXT_PUBLIC_ 付きの名前で読むので、ここで渡し替える
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+          # 本番と同じ分岐を通すためのダミー。秘密ではないので直書きする。
+          #
+          # R2_PUBLIC_BASE_URL が無いと scripts/check-build-env.mjs が
+          # prebuild でビルドを止める。値を渡さないと CI が常に赤くなるうえ、
+          # 渡さないまま止めないようにすると今度は画像の remotePatterns と
+          # CSP がワイルドカードに落ちた構成だけを検証し続けることになる。
+          #
+          # NEXT_PUBLIC_SITE_URL は止める対象ではないが、無いと robots.txt と
+          # sitemap.xml に localhost が焼き込まれた状態で検証してしまう。
+          R2_PUBLIC_BASE_URL: https://ci-placeholder.r2.dev
+          NEXT_PUBLIC_SITE_URL: https://ci-placeholder.example
         run: npm run build
 
   # -----------------------------------------------------------

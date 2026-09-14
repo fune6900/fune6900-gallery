@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 /** URL からホスト名だけ取り出す。取れなければ null。 */
 function hostOf(url: string | undefined): string | null {
@@ -58,7 +59,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  // 本番をDockerで自前ホストする場合に必要（Vercelなら無視される・無害）
+  // ローカルをDockerで動かす場合に必要。
+  // OpenNext（Cloudflare）も standalone の出力を前提にしているので都合がいい。
   output: "standalone",
 
   // 使っていないヘッダーを出さない
@@ -71,7 +73,11 @@ const nextConfig: NextConfig = {
   images: {
     // 実際に使っているバケットのホストだけを許可する。
     // ワイルドカードのままだと、画像最適化APIが他人の r2.dev バケットの
-    // 取得代行に使われうる。env が無い環境（CI等）ではワイルドカードに戻す。
+    // 取得代行に使われうる。
+    //
+    // 値が無い時にワイルドカードへ落とすのは `next dev` と `next lint` の
+    // ためで、本番ビルドはそこへ到達しない。scripts/check-build-env.mjs が
+    // prebuild で止める（config 側で止めると lint まで巻き添えで落ちる）。
     remotePatterns: r2Host
       ? [{ protocol: "https", hostname: r2Host }]
       : [
@@ -81,6 +87,11 @@ const nextConfig: NextConfig = {
 
     // 変換結果を長く持つ。作品画像はファイル名込みで一意なので入れ替わらない。
     // ここが短いと、原寸（1枚20MB超のものもある）を何度も取りに行くことになる。
+    //
+    // ⚠ Cloudflare Images バインディング経由（本番）ではこの値は効かない。
+    //   あちらは「永続キャッシュか、しないか」の二択で、秒数を受け取らない。
+    //   実質もっと長く持たれるので困りはしないが、ここを直しても本番は変わらない。
+    //   残してあるのは `next dev` と Docker 実行のため。
     minimumCacheTTL: 60 * 60 * 24 * 31,
 
     // 変換は「URL・幅・品質・形式」ごとに別物としてキャッシュされる。つまり
@@ -103,3 +114,14 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+// `next dev` から Cloudflare のバインディング（R2・Images・Durable Object）を
+// 触れるようにする。これが無いと開発中だけバインディングが undefined になる。
+//
+// 開発時に限る。この関数は呼ばれるたびに miniflare を1つ立ち上げるが、
+// ビルド時に要るものではない（静的生成しているのは /_not-found と robots.txt で、
+// どちらもバインディングを使わない）。
+// 素で置くと `next build` や `next lint` でも毎回起動し、CI が遅く不安定になる。
+if (process.env.NODE_ENV === "development") {
+  initOpenNextCloudflareForDev();
+}

@@ -10,6 +10,16 @@ next-env.d.ts
 tsconfig.tsbuildinfo
 .vercel
 
+# --- Cloudflare Workers / OpenNext ---
+# .open-next はビルド成果物、.wrangler はローカル実行時の状態。
+# .dev.vars は開発用の値を持つので .env と同じ扱い。
+# cloudflare-env.d.ts は `npm run cf-typegen` の生成物。
+.open-next/
+.wrangler/
+.dev.vars
+.dev.vars.*
+cloudflare-env.d.ts
+
 # --- Env ---
 .env
 .env.local
