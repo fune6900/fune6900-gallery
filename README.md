@@ -145,6 +145,19 @@ npm run preview   # ビルドして Workers のローカル実行 → http://loc
 `.dev.vars` に上記のシークレットと `NEXTJS_ENV=development` を置いておく
 （`.env.example` を参照。gitignore 済み）。
 
+> ⚠ **ローカルで作品を登録すると、本番DBに壊れた行が残る。**
+>
+> `wrangler dev` は R2 バインディングを模擬バケットに繋ぐので、画像は
+> `.wrangler/state` に入る。一方で作品行が書かれる Supabase はローカルでも
+> 実物で、`image_url` には実バケットの公開URLが入る。結果、画像だけ存在しない
+> 行が本番に残り、一覧で画像が表示されない（`/_next/image` が 404 を返す）。
+>
+> ローカルで登録を試したら、その作品は管理画面から必ず削除すること。
+>
+> 画像表示まで含めて確かめたいなら、`wrangler login` したうえで
+> `wrangler.jsonc` の `WORKS_BUCKET` に `"remote": true` を足す。
+> ただし書き込み先が本番バケットになる点に注意。
+
 #### 6-3. デプロイ
 
 ```bash

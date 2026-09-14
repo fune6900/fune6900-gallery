@@ -53,6 +53,20 @@
       // fs.readFile を呼ぶが unenv に実装が無い）。
       "binding": "WORKS_BUCKET",
       "bucket_name": "fune-gallery",
+
+      // ⚠ ローカル開発での注意。
+      //
+      // 既定では wrangler が模擬バケットを用意し、書き込みは
+      // .wrangler/state に入る。ところが作品行が書かれる Supabase は
+      // ローカルでも実物なので、image_url には実バケットの公開URLが入る。
+      // つまり「画像だけ存在しない行」が本番のDBに残る。
+      //
+      // ローカルで作品登録を試したら、その作品は必ず消すこと。
+      //
+      // 実物のバケットに書きたい場合は、`wrangler login` したうえで
+      // 次の行を足す（未認証のまま足すと wrangler dev が起動しない）。
+      //
+      //   "remote": true,
     },
     {
       "binding": "NEXT_INC_CACHE_R2_BUCKET",
