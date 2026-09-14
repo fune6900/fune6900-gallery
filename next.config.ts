@@ -110,6 +110,30 @@ const nextConfig: NextConfig = {
     // 表示サイズは変わらないので見た目に影響はない。
     deviceSizes: [640, 750, 828, 1080, 1920, 2048],
     imageSizes: [64, 128, 256, 384],
+
+    // 許可する品質を列挙する。★無いと本番で画像が壊れる。
+    //
+    // OpenNext は Next の画像最適化を使わず、独自の実装に差し替える。
+    // そちらは qualities 未設定時の既定が [75] で、しかも Next と違って
+    // 無条件に検証する（@opennextjs/cloudflare の compile-images.js と
+    // templates/images.js）。一方 Next 側の既定は undefined で、その場合
+    // キーごと images-manifest から落ちる。
+    // つまり Workers 上では 75 以外が全部 400 になる。
+    //
+    // このサイトが使っているのは3つ。
+    //   75  カード・詳細（next/image の既定。WorkImage は未指定）
+    //   80  OGP（works/[id]/page.tsx の generateMetadata）
+    //   85  ライトボックス（同ページの原寸表示）
+    // 列挙しないと 80 と 85 が落ちる。
+    //
+    // 副次的に、外から q を指定し放題だった状態も閉じる。ただし変換数の
+    // 上限を担保するものではない。Accept ヘッダ次第で webp と元形式の
+    // 2通りが作れるので、幅10種 × 品質3種 × 形式2 は残る。
+    //
+    // 増やす時はここに足すこと。載っていない値は本番で 400 になる。
+    // なお `next dev` は Next 本体の実装を通るので挙動が違う（dev だけ
+    // q=70 も通る）。確かめるなら `npm run preview`。
+    qualities: [75, 80, 85],
   },
 };
 
