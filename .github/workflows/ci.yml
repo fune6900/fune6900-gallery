@@ -193,8 +193,8 @@ jobs:
           #
           # R2_PUBLIC_BASE_URL が無いと scripts/check-build-env.mjs が
           # prebuild でビルドを止める。値を渡さないと CI が常に赤くなるうえ、
-          # 渡さないまま止めないようにすると今度は画像の remotePatterns と
-          # CSP がワイルドカードに落ちた構成だけを検証し続けることになる。
+          # 止めない作りにすると今度は画像の remotePatterns と CSP が
+          # ワイルドカードに落ちた構成だけを検証し続けることになる。
           #
           # NEXT_PUBLIC_SITE_URL は止める対象ではないが、無いと robots.txt と
           # sitemap.xml に localhost が焼き込まれた状態で検証してしまう。
