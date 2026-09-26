@@ -1,7 +1,6 @@
 /**
  * 本番ビルドの前に、欠けていると危ないものだけを確かめる。
- * package.json の prebuild から呼ばれるので `npm run build` で必ず通る
- * （`opennextjs-cloudflare build` も内部で `npm run build` を叩く）。
+ * package.json の prebuild から呼ばれるので `npm run build` で必ず通る。
  *
  * next.config.ts の中ではなくここに置いている理由:
  * config は `next lint` でも `next dev` でも読み込まれ、しかも lint は
@@ -37,12 +36,11 @@ const problems = [];
  * next.config.ts はこの値からホスト名を取れないと、画像の remotePatterns と
  * CSP の img-src を **.r2.dev のワイルドカードに落とす。開発中は都合がいいが、
  * 本番でこれが起きると画像最適化APIが「誰の r2.dev バケットでも取ってくる
- * 代行窓口」になる。OpenNext の画像ハンドラは remotePatterns しか見ていない
- * ので、ここが緩いと他に止める場所が無い。
+ * 代行窓口」になる。止められるのは remotePatterns だけなので、
+ * ここが緩いと他に関門が無い。
  *
- * Vercel の頃は env がプロジェクト設定で中央管理されていたので取りこぼす
- * 余地が小さかった。任意の環境から `npm run deploy` を叩くようになった以上、
- * 渡し忘れは起こる前提で塞ぐ。
+ * 渡し忘れは起こる前提で塞ぐ。黙って安全でない構成が出来上がるより、
+ * ビルドが落ちる方がいい。
  */
 const r2 = process.env.R2_PUBLIC_BASE_URL;
 if (!r2) {

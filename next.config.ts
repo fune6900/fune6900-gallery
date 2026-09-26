@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 /** URL からホスト名だけ取り出す。取れなければ null。 */
 function hostOf(url: string | undefined): string | null {
@@ -59,8 +58,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  // ローカルをDockerで動かす場合に必要。
-  // OpenNext（Cloudflare）も standalone の出力を前提にしているので都合がいい。
+  // 本番をDockerで自前ホストする場合に必要（Vercelなら無視される・無害）
   output: "standalone",
 
   // 使っていないヘッダーを出さない
@@ -76,8 +74,8 @@ const nextConfig: NextConfig = {
     // 取得代行に使われうる。
     //
     // 値が無い時にワイルドカードへ落とすのは `next dev` と `next lint` の
-    // ためで、本番ビルドはそこへ到達しない。scripts/check-build-env.mjs が
-    // prebuild で止める（config 側で止めると lint まで巻き添えで落ちる）。
+    // ため。本番ビルドはそこへ到達しない（scripts/check-build-env.mjs が
+    // prebuild で止める。config 側で止めると lint まで巻き添えで落ちる）。
     remotePatterns: r2Host
       ? [{ protocol: "https", hostname: r2Host }]
       : [
@@ -87,11 +85,6 @@ const nextConfig: NextConfig = {
 
     // 変換結果を長く持つ。作品画像はファイル名込みで一意なので入れ替わらない。
     // ここが短いと、原寸（1枚20MB超のものもある）を何度も取りに行くことになる。
-    //
-    // ⚠ Cloudflare Images バインディング経由（本番）ではこの値は効かない。
-    //   あちらは「永続キャッシュか、しないか」の二択で、秒数を受け取らない。
-    //   実質もっと長く持たれるので困りはしないが、ここを直しても本番は変わらない。
-    //   残してあるのは `next dev` と Docker 実行のため。
     minimumCacheTTL: 60 * 60 * 24 * 31,
 
     // 変換は「URL・幅・品質・形式」ごとに別物としてキャッシュされる。つまり
@@ -111,41 +104,21 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1920, 2048],
     imageSizes: [64, 128, 256, 384],
 
-    // 許可する品質を列挙する。★無いと本番で画像が壊れる。
+    // 許可する品質を列挙する。既定は「1〜100を何でも通す」。
     //
-    // OpenNext は Next の画像最適化を使わず、独自の実装に差し替える。
-    // そちらは qualities 未設定時の既定が [75] で、しかも Next と違って
-    // 無条件に検証する（@opennextjs/cloudflare の compile-images.js と
-    // templates/images.js）。一方 Next 側の既定は undefined で、その場合
-    // キーごと images-manifest から落ちる。
-    // つまり Workers 上では 75 以外が全部 400 になる。
+    // /_next/image は誰でも叩ける。remotePatterns で変換対象は自分の
+    // バケットに絞ってあるが、q を指定し放題だと 1枚につき100通りの
+    // 変換を外から作れる。画像最適化は変換ごとに費用が掛かるので絞る。
     //
     // このサイトが使っているのは3つ。
     //   75  カード・詳細（next/image の既定。WorkImage は未指定）
     //   80  OGP（works/[id]/page.tsx の generateMetadata）
     //   85  ライトボックス（同ページの原寸表示）
-    // 列挙しないと 80 と 85 が落ちる。
     //
-    // 副次的に、外から q を指定し放題だった状態も閉じる。ただし変換数の
-    // 上限を担保するものではない。Accept ヘッダ次第で webp と元形式の
-    // 2通りが作れるので、幅10種 × 品質3種 × 形式2 は残る。
-    //
-    // 増やす時はここに足すこと。載っていない値は本番で 400 になる。
-    // なお `next dev` は Next 本体の実装を通るので挙動が違う（dev だけ
-    // q=70 も通る）。確かめるなら `npm run preview`。
+    // 増やす時はここに足すこと。載っていない値は 400 になる。
+    // なお Next 16 ではこの設定が必須になる。
     qualities: [75, 80, 85],
   },
 };
 
 export default nextConfig;
-
-// `next dev` から Cloudflare のバインディング（R2・Images・Durable Object）を
-// 触れるようにする。これが無いと開発中だけバインディングが undefined になる。
-//
-// 開発時に限る。この関数は呼ばれるたびに miniflare を1つ立ち上げるが、
-// ビルド時に要るものではない（静的生成しているのは /_not-found と robots.txt で、
-// どちらもバインディングを使わない）。
-// 素で置くと `next build` や `next lint` でも毎回起動し、CI が遅く不安定になる。
-if (process.env.NODE_ENV === "development") {
-  initOpenNextCloudflareForDev();
-}
